@@ -1,0 +1,109 @@
+body { margin:0;
+     font-family: Arial,
+     sans-serif; 
+     background:#f5f5f5; 
+     font-size:13px; 
+    }
+  .layout { 
+    display:flex; 
+    flex-direction:column; 
+    min-height:100vh; 
+}
+  .body-layout { 
+    display:flex; 
+    flex:1; 
+}
+  .content { 
+    flex:1; 
+    padding:15px; 
+    overflow-y:auto; 
+    position:relative; 
+}
+  button, .btn { 
+    padding:6px 14px; 
+    border:none; 
+    border-radius:4px; 
+    font-size:13px; 
+    cursor:pointer; 
+}
+.submit-btn:disabled {
+    background: #aaa;        /* gray color when disabled */
+    cursor: not-allowed;     /* forbidden icon */
+    opacity: 0.7;            /* faded look */
+}
+.submit-btn:not(:disabled):hover {
+    background:#009688; 
+}
+  .submit-btn { 
+    background:#009688; 
+    color:#fff; 
+}
+  .back-btn { 
+    background:#ff5722; 
+    color:#fff; 
+    font-weight:bold; 
+    position:absolute; 
+    top:15px; 
+    right:15px; 
+}
+  .form-wrapper { 
+    background:#fff;
+    padding:20px; 
+    border-radius:6px; 
+    max-width:900px; 
+    margin:auto; 
+    box-shadow:0 2px 8px rgba(0,0,0,0.1); 
+}
+  .form-section { 
+    margin-bottom:40px; 
+}
+  .form-section h3 { 
+    text-align:center; 
+    margin-bottom:20px; 
+}
+  table { 
+    width:100%; 
+    border-collapse:collapse; 
+    margin-bottom:20px; 
+}
+  th, td { 
+    border:1px solid #ddd; 
+    padding:6px 8px; 
+    vertical-align:top; 
+}
+  input[type="text"], input[type="number"] { 
+    width:100%; 
+    padding:4px; 
+    font-size:13px; 
+    box-sizing:border-box; 
+}
+  .success { 
+    background:#d4edda; 
+    color:#155724; 
+    padding:10px; 
+    border-radius:4px; 
+    margin-bottom:15px; 
+    text-align:center; 
+}
+  .indent { 
+    padding-left:20px; 
+}
+  .nested-table { 
+    width:100%; border:none; 
+    border-collapse:collapse; 
+}
+  .nested-table td { 
+    border:none; 
+    padding:2px 4px; 
+}
+  .form-bottom { 
+    display:flex; 
+    justify-content:flex-end; 
+    margin-top:20px; 
+}
+  .reports-label { 
+    font-size:22px; 
+    font-weight:bold; 
+    margin-bottom:15px; 
+    text-align:left; 
+}
