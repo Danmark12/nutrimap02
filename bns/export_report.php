@@ -213,8 +213,8 @@ $p1 = [
     ['Total Number of Women Who Are Pregnant', val($totals,'ind6a')],
     ['Total Number of Women Who Are Lactating', val($totals,'ind6b')],
     ['Total Number of Households with Preschool Children (0–59 mos.)', val($totals,'ind7')],
-    ['Actual Population of Preschool Children (0–59 mos.)', val($totals,'ind8')],
-    ['Total Number of Preschool Children 0–59 mos. Measured During OPT Plus', val($totals,'ind9')],
+    ['Estimate Population of Preschool Children (0–59 mos.)', val($totals,'ind8')],
+    ['Actual Number of Preschool Children 0–59 mos. Measured During OPT Plus', val($totals,'ind9')],
     ['Percent Measured Coverage (OPT Plus)', val($totals,'ind9a','pct')]
 ];
 
@@ -310,11 +310,11 @@ for($i=0;$i<count($dwelling);$i++){
 }
 
 // Number-only indicators
-$p4[] = ['Total Number of Households Using Iodized Salt', val($totals,'ind32_no'), val($totals,'ind32_pct','pct')];
-$p4[] = ['Total Number of Eateries/Carinderia', val($totals,'ind33_no'), val($totals,'ind33_pct','pct')];
-$p4[] = ['Total Number of Sari-Sari Stores Related to Iodized Salt', val($totals,'ind34_no'), val($totals,'ind34_pct','pct')];
-$p4[] = ['Total Number of Sari-Sari Stores Related to Cooking Oil', val($totals,'ind35_no'), val($totals,'ind35_pct','pct')];
-$p4[] = ['Total Number of Bakeries with Fortified Flour', val($totals,'ind36_no'), val($totals,'ind36_pct','pct')];
+$p4[] = ['Total Number of Households Using Iodized Salt', val($totals,'ind32')];
+$p4[] = ['Total Number of Eateries/Carinderia', val($totals,'ind33')];
+$p4[] = ['Total Number of Sari-Sari Stores Related to Iodized Salt', val($totals,'ind34')];
+$p4[] = ['Total Number of Sari-Sari Stores Related to Cooking Oil', val($totals,'ind35')];
+$p4[] = ['Total Number of Bakeries with Fortified Flour', val($totals,'ind36')];
 
 $p4[] = ['Barangay Nutrition Scholar', val($totals,'ind37a'), ''];
 $p4[] = ['Barangay Health Worker', val($totals,'ind37b'), ''];

@@ -91,11 +91,11 @@ function getBarangayLogo($barangay) {
             'ind30d_no','ind30d_pct',
             'ind31a_no','ind31a_pct','ind31b_no','ind31b_pct','ind31c_no','ind31c_pct',
             'ind31d_no','ind31d_pct','ind31e_no','ind31e_pct','ind31f_no','ind31f_pct',
-            'ind32_no', 'ind32_pct',          
-            'ind33_no','ind33_pct',
-            'ind34_no','ind34_pct',
-            'ind35_no','ind35_pct',
-            'ind36_no','ind36_pct',
+            'ind32',       
+            'ind33',
+            'ind34',
+            'ind35',
+            'ind36',
             'ind37a','ind37b','ind38'
         ];
 
@@ -241,8 +241,8 @@ foreach ($cnoUsers as $cnoId) {
               <tr><td class="indent">a. Pregnant</td><td><input type="number" name="ind6a" required></td></tr>
               <tr><td class="indent">b. Lactating</td><td><input type="number" name="ind6b" required></td></tr>
               <tr><td>7. Total Number of Households With Preschool Children 0-59 Months</td><td><input type="number" name="ind7" required></td></tr>
-              <tr><td>8. Actual Population of Preschool Children 0-59 Months</td><td><input type="number" name="ind8" required></td></tr>
-              <tr><td>9. Total Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td><td><input type="number" name="ind9" required></td></tr>
+              <tr><td>8. Estimate Population of Preschool Children 0-59 Months</td><td><input type="number" name="ind8" required></td></tr>
+              <tr><td>9. Actual Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td><td><input type="number" name="ind9" required></td></tr>
               <tr><td>a. Percent (%) Measured Coverage (OPT Plus)</td><td><input type="number" step="0.01" name="ind9a" required></td></tr>
   <tr>
     <td>b. Number and Percent (%) of Preschool Children According to Nutritional Status</td>
@@ -253,15 +253,15 @@ foreach ($cnoUsers as $cnoId) {
   </tr>
   <?php
   $nutri = [
-      '1) Severely Underweight',
-      '2) Underweight',
-      '3) Normal Weight',
-      '4) Severely Wasted',
-      '5) Wasted',
-      '6) Overweight',
-      '7) Obese',
-      '8) Severely Stunted',
-      '9) Stunted'
+      '1. Severely Underweight',
+      '2. Underweight',
+      '3. Normal Weight',
+      '4. Severely Wasted',
+      '5. Wasted',
+      '6. Overweight',
+      '7. Obese',
+      '8. Severely Stunted',
+      '9. Stunted'
   ];
   foreach($nutri as $i => $name) {
       $n = $i + 1;
@@ -290,8 +290,8 @@ foreach ($cnoUsers as $cnoId) {
     </td>
   <?php
   $edu = [
-      'a) Number of Day Care Centers',
-      'b) Number of Elementary Schools'
+      'a. Number of Day Care Centers',
+      'b. Number of Elementary Schools'
   ];
   foreach($edu as $i => $name) {
       $n = chr(97 + $i); // a, b
@@ -317,13 +317,13 @@ foreach ($cnoUsers as $cnoId) {
   </tr>
   <?php
   $school = [
-      'a) Severely Wasted',
-      'b) Wasted',
-      'c) Severely Stunted',
-      'd) Stunted',
-      'e) Normal',
-      'f) Overweight',
-      'g) Obese'
+      'a. Severely Wasted',
+      'b. Wasted',
+      'c. Severely Stunted',
+      'd. Stunted',
+      'e. Normal',
+      'f. Overweight',
+      'g. Obese'
   ];
   foreach($school as $i => $name) {
       $n = chr(97 + $i); 
@@ -348,11 +348,11 @@ foreach ($cnoUsers as $cnoId) {
     </td>
   </tr><?php
   $toilet = [
-      'a) Water-sealed toilet',
-      'b) Antipolo (Unsanitary Toilet)',
-      'c) Open Pit',
-      'd) Shared',
-      'e) No Toilet'
+      'a. Water-sealed toilet',
+      'b. Antipolo (Unsanitary Toilet)',
+      'c. Open Pit',
+      'd. Shared',
+      'e. No Toilet'
   ];
   foreach($toilet as $i => $name) {
       $n = chr(97 + $i); 
@@ -374,10 +374,10 @@ foreach ($cnoUsers as $cnoId) {
   </tr>
   <?php
   $garbage_types = [
-      'a) Barangay/City Garbage Collection',
-      'b) Own Compose Pit',
-      'c) Burning',
-      'd) Dumping'
+      'a. Barangay/City Garbage Collection',
+      'b. Own Compose Pit',
+      'c. Burning',
+      'd. Dumping'
   ];
   foreach($garbage_types as $i => $name) {
       $n = chr(97 + $i);
@@ -399,13 +399,13 @@ foreach ($cnoUsers as $cnoId) {
   </tr>
               <?php
   $water_sources = [
-      'a) Pipe Water System(Level III)',
-      'b) Spring (Level II)',
-      'c) Deep Well With Topstand Communal Source Water System (Level II)',
-      'd) Deep Well With Individual Faucet (Level III)',
-      'e) Purified Station (Level III)',
-      'f) Open Shallow Dug Well (Level I)',
-      'g) Artesian Well '
+      'a. Pipe Water System(Level III)',
+      'b. Spring (Level II)',
+      'c. Deep Well With Topstand Communal Source Water System (Level II)',
+      'd. Deep Well With Individual Faucet (Level III)',
+      'e. Purified Station (Level III)',
+      'f. Open Shallow Dug Well (Level I)',
+      'g. Artesian Well '
   ];
   foreach($water_sources as $i => $name) {
       $n = chr(97 + $i); 
@@ -427,10 +427,10 @@ foreach ($cnoUsers as $cnoId) {
   </tr>
   <?php
   $household_items = [
-      'a) Vegetable Garden',
-      'b) Livestock Poultry',
-      'c) Fishponds',
-      'd) Other Specify: No Garden'
+      'a. Vegetable Garden',
+      'b. Livestock Poultry',
+      'c. Fishponds',
+      'd. Other Specify: No Garden'
   ];
   foreach($household_items as $i => $name) {
       $n = chr(97 + $i);
@@ -451,12 +451,12 @@ foreach ($cnoUsers as $cnoId) {
     </td>
   <?php
   $dwelling_types = [
-      'a) Concrete',
-      'b) Semi Concrete',
-      'c) Wooden House',
-      'd) Nipa Bamboo House',
-      'e) Barong-Barong Makeshift',
-      'f) Makeshift'
+      'a. Concrete',
+      'b. Semi Concrete',
+      'c. Wooden House',
+      'd. Nipa Bamboo House',
+      'e. Barong-Barong Makeshift',
+      'f. Makeshift'
   ];
   foreach($dwelling_types as $i => $name) {
       $n = chr(97 + $i);
@@ -469,46 +469,17 @@ foreach ($cnoUsers as $cnoId) {
             </tr>";
   }
   ?>
-<tr>
-  <td style="width:60%; font-weight:normal;">32. Total Number of Households Using Iodized Salt</td>
-  <td style="display:flex; gap:10px;">
-      <input type="number" name="ind32_no" placeholder="No" style="flex:1;" required>
-      <input type="number" step="0.01" name="ind32_pct" placeholder="%" style="flex:1;" required>
-  </td>
-</tr>
-<tr>
-  <td style="width:60%; font-weight:normal;">33. Total Number of Eateries/Carenderia</td>
-  <td style="display:flex; gap:10px;">
-      <input type="number" name="ind33_no" placeholder="No" style="flex:1;" required>
-      <input type="number" step="0.01" name="ind33_pct" placeholder="%" style="flex:1;" required>
-  </td>
-</tr>
-<tr>
-  <td style="width:60%; font-weight:normal;">34. Total Number of Sari-Sari Stores Related to Iodized Salt</td>
-  <td style="display:flex; gap:10px;">
-      <input type="number" name="ind34_no" placeholder="No" style="flex:1;" required>
-      <input type="number" step="0.01" name="ind34_pct" placeholder="%" style="flex:1;" required>
-  </td>
-</tr>
-<tr>
-  <td style="width:60%; font-weight:normal;">35. Total Number of Sari-Sari Stores Related to Cooking Oil</td>
-  <td style="display:flex; gap:10px;">
-      <input type="number" name="ind35_no" placeholder="No" style="flex:1;" required>
-      <input type="number" step="0.01" name="ind35_pct" placeholder="%" style="flex:1;" required>
-  </td>
-</tr>
-<tr>
-  <td style="width:60%; font-weight:normal;">36. Total Number of Bakery With Fortified Flour</td>
-  <td style="display:flex; gap:10px;">
-      <input type="number" name="ind36_no" placeholder="No" style="flex:1;" required>
-      <input type="number" step="0.01" name="ind36_pct" placeholder="%" style="flex:1;" required>
-  </td>
-</tr>
+
+              <tr><td>32. Total Number of Households Using Iodized Salt</td><td><input type="number" name="ind32" required></td></tr>
+              <tr><td>33. Total Number of Eateries/Carenderia</td><td><input type="number" name="ind33" required></td></tr>
+              <tr><td>34. Total Number of Sari-Sari Stores Related to Iodized Salt</td><td><input type="number" name="ind34" required></td></tr>
+              <tr><td>35. Total Number of Sari-Sari Stores Related to Cooking Oil</td><td><input type="number" name="ind35" required></td></tr>
+              <tr><td>36. Total Number of Bakery With Fortified Flour</td><td><input type="number" name="ind36" required></td></tr>
   <tr><td>37. Number of Health and Nutrition Workers:</td><td></td></tr>
   <?php
   $health_workers = [
-      'a) Barangay Nutrition Scholar',
-      'b) Barangay Health Worker'
+      'a. Barangay Nutrition Scholar',
+      'b. Barangay Health Worker'
   ];
   foreach($health_workers as $i => $name) {
       $n = chr(97 + $i);

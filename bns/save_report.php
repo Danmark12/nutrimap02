@@ -109,11 +109,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields["ind31{$letter}_pct"] = $_POST["ind31{$letter}_pct"] ?? null;
     }
 
-    // ✅ ind32, ind33, ind34, ind35, ind36 NO + PCT
-    foreach (['32','33','34','35','36'] as $num) {
-        $fields["ind{$num}_no"] = $_POST["ind{$num}_no"] ?? null;
-        $fields["ind{$num}_pct"] = $_POST["ind{$num}_pct"] ?? null;
-    }
+    // ✅ NEW – ind32 to ind36 (NO percentage)
+foreach (['32','33','34','35','36'] as $num) {
+    $fields["ind{$num}"] = $_POST["ind{$num}"] ?? 0;
+}
 
     // ✅ Update bns_reports
     $updateFields = [];
