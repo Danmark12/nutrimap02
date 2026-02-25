@@ -230,8 +230,8 @@ table th:nth-child(2) {
   <tr class="indent"><td>b. Lactating</td><td><?= $has_bns ? val($row,'ind6b','int') : '—' ?></td></tr>
 
   <tr><td>7. Total Number of Households With Preschool Children 0-59 Months</td><td><?= $has_bns ? val($row,'ind7','int') : '—' ?></td></tr>
-  <tr><td>8. Actual Population of Preschool Children 0-59 Months</td><td><?= $has_bns ? val($row,'ind8','int') : '—' ?></td></tr>
-    <tr><td>9. Total Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td><td><?= $has_bns ? val($row,'ind9','int') : '—' ?></td></tr>
+  <tr><td>8. Estimate Population of Preschool Children 0-59 Months</td><td><?= $has_bns ? val($row,'ind8','int') : '—' ?></td></tr>
+    <tr><td>9. Actual Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td><td><?= $has_bns ? val($row,'ind9','int') : '—' ?></td></tr>
   <tr><td>a. Percent (%) Measured Coverage (OPT Plus)</td><td><?= $has_bns ? val($row,'ind9a','dec2') : '—' ?></td></tr>
   <tr>
     <td>b. Number and Percent (%) of Preschool Children According to Nutritional Status</td>
@@ -242,10 +242,10 @@ table th:nth-child(2) {
   </tr>
   </tr>
   <?php 
-  $nutri = ['Severely underweight','Underweight','Normal weight','Severely wasted','Wasted','Overweight','Obese','Severely stunted','Stunted'];
+  $nutri = ['1. Severely underweight','2. Underweight','3. Normal weight','4. Severely wasted','5. Wasted','6. Overweight','7. Obese','8. Severely stunted','9. Stunted'];
   for ($i=1;$i<=9;$i++): ?>
   <tr class="indent">
-    <td><?= $i.') '.$nutri[$i-1] ?></td>
+    <td><?= $i.'. '.$nutri[$i-1] ?></td>
     <td class="number-cell">
       <div><?= $has_bns ? val($row,"ind9b{$i}_no",'int') : '—' ?></div>
       <div><?= $has_bns ? val($row,"ind9b{$i}_pct",'pct') : '—' ?></div>
@@ -473,47 +473,12 @@ table th:nth-child(2) {
   </tr>
   <?php $i++; endforeach; ?>
 
-  <tr>
-  <td style="font-weight:normal;">32. Total Number of Households Using Iodized Salt</td>
-  <td class="number-cell">
-    <div><?= $has_bns ? val($row,"ind32_no",'int') : '—' ?></div>
-    <div><?= $has_bns ? (isset($row["ind32_pct"]) ? number_format((float)$row["ind32_pct"],2).'%' : '—') : '—' ?></div>
-  </td>
-</tr>
 
-<tr>
-  <td style="font-weight:normal;">33. Total Number of Eateries/Carenderia</td>
-  <td class="number-cell">
-    <div><?= $has_bns ? val($row,"ind33_no",'int') : '—' ?></div>
-    <div><?= $has_bns ? (isset($row["ind33_pct"]) ? number_format((float)$row["ind33_pct"],2).'%' : '—') : '—' ?></div>
-  </td>
-</tr>
-
-<tr>
-  <td style="font-weight:normal;">34. Total Number of Sari-Sari Stores Related to Iodized Salt</td>
-  <td class="number-cell">
-    <div><?= $has_bns ? val($row,"ind34_no",'int') : '—' ?></div>
-    <div><?= $has_bns ? (isset($row["ind34_pct"]) ? number_format((float)$row["ind34_pct"],2).'%' : '—') : '—' ?></div>
-  </td>
-</tr>
-
-<tr>
-  <td style="font-weight:normal;">35. Total Number of Sari-Sari Stores Related to Cooking Oil</td>
-  <td class="number-cell">
-    <div><?= $has_bns ? val($row,"ind35_no",'int') : '—' ?></div>
-    <div><?= $has_bns ? (isset($row["ind35_pct"]) ? number_format((float)$row["ind35_pct"],2).'%' : '—') : '—' ?></div>
-  </td>
-</tr>
-
-<tr>
-  <td style="font-weight:normal;">36. Total Number of Bakery With Fortified Flour</td>
-  <td class="number-cell">
-    <div><?= $has_bns ? val($row,"ind36_no",'int') : '—' ?></div>
-    <div><?= $has_bns ? (isset($row["ind36_pct"]) ? number_format((float)$row["ind36_pct"],2).'%' : '—') : '—' ?></div>
-  </td>
-</tr>
-
-
+  <tr><td>32. Total Number of Households Using Iodized Salt</td><td><?= $has_bns ? val($row,'ind32','int') : '—' ?></td></tr>
+  <tr><td>33. Total Number of Eateries/Carenderia</td><td><?= $has_bns ? val($row,'ind33','int') : '—' ?></td></tr>
+  <tr><td>34. Total Number of Sari-Sari Stores Related to Iodized Salt</td><td><?= $has_bns ? val($row,'ind34','int') : '—' ?></td></tr>
+  <tr><td>35. Total Number of Sari-Sari Stores Related to Cooking Oil</td><td><?= $has_bns ? val($row,'ind35','int') : '—' ?></td></tr>
+  <tr><td>36. Total Number of Bakery With Fortified Flour</td><td><?= $has_bns ? val($row,'ind36','int') : '—' ?></td></tr>
 
 
   <tr>

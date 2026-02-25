@@ -24,8 +24,8 @@ $base = [
  'ind7','ind8','ind9','ind9a','ind10','ind11','ind12','ind13','ind14','ind15',
  'ind16','ind17a_public','ind17a_private','ind17b_public','ind17b_private',
  'ind18','ind19','ind20','ind21','ind23','ind24','ind25','ind26',
- 'ind32_no','ind32_pct','ind33_no','ind33_pct','ind34_no','ind34_pct',
- 'ind35_no','ind35_pct','ind36_no','ind36_pct','ind37a','ind37b','ind38'
+  'ind32','ind33','ind34','ind35','ind36',
+'ind37a','ind37b','ind38'
 ];
 
 /* Grouped fields (_no and _pct) */
@@ -159,25 +159,28 @@ table td:nth-child(2) {text-align: center;}
 
 <!-- ================= PAGE 1 ================= -->
 <table>
-<thead><tr><th style="width:70%">Indicator</th><td class="number-cell"><div>No.</div></td></tr></thead>
+  <colgroup>
+    <col style="width: auto;">
+    <col style="width: 180px;"> 
+  </colgroup>
 <tbody>
-<tr><td class="ind">Total Population</td><td><?=val($totals,'ind1')?></td></tr>
+<tr><td class="ind">1. Total Population</td><td><?=val($totals,'ind1')?></td></tr>
 <tr class="indent"><td class="ind">Male</td><td><?=val($totals,'ind_male')?></td></tr>
 <tr class="indent"><td class="ind">Female</td><td><?=val($totals,'ind_female')?></td></tr>
-<tr><td class="ind">Number of households</td><td><?=val($totals,'ind2')?></td></tr>
-<tr><td class="ind">Total number of families</td><td><?=val($totals,'ind3')?></td></tr>
-<tr><td class="ind">Total Number of HHs More Than 5 Below Members</td><td><?=val($totals,'ind4')?></td></tr>
-<tr><td class="ind">Total Number of HHs More Than 5 Above Members</td><td><?=val($totals,'ind5')?></td></tr>
-<tr><td class="ind">Total number of women who are:</td><td></td></tr>
-<tr class="indent"><td class="ind">Pregnant</td><td><?=val($totals,'ind6a')?></td></tr>
-<tr class="indent"><td class="ind">Lactating</td><td><?=val($totals,'ind6b')?></td></tr>
-<tr><td class="ind">Total households with preschool children aged 0–59 months</td><td><?=val($totals,'ind7')?></td></tr>
-<tr><td class="ind">Actual population of preschool children 0–59 months</td><td><?=val($totals,'ind8')?></td></tr>
-<tr><td class="ind">Total preschool children 0–50 months measured during OPT Plus</td><td><?=val($totals,'ind9')?></td></tr>
-<tr><td class="ind">Percent (%) measured coverage (OPT Plus)</td><td><?=val($totals,'ind9a','dec2')?>%</td></tr>
-<tr><td class="ind">Number and percent (%) of preschool children according to Nutritional Status</td>
+<tr><td class="ind">2. Number of households</td><td><?=val($totals,'ind2')?></td></tr>
+<tr><td class="ind">3. Total number of families</td><td><?=val($totals,'ind3')?></td></tr>
+<tr><td class="ind">4. Total Number of HHs More Than 5 Below Members</td><td><?=val($totals,'ind4')?></td></tr>
+<tr><td class="ind">5. Total Number of HHs More Than 5 Above Members</td><td><?=val($totals,'ind5')?></td></tr>
+<tr><td class="ind">6. Total number of women who are:</td><td></td></tr>
+<tr class="indent"><td class="ind">a. Pregnant</td><td><?=val($totals,'ind6a')?></td></tr>
+<tr class="indent"><td class="ind">b. Lactating</td><td><?=val($totals,'ind6b')?></td></tr>
+<tr><td class="ind">7. Total households with preschool children aged 0–59 months</td><td><?=val($totals,'ind7')?></td></tr>
+<tr><td class="ind">8. Actual population of preschool children 0–59 months</td><td><?=val($totals,'ind8')?></td></tr>
+<tr><td class="ind">9. Total preschool children 0–50 months measured during OPT Plus</td><td><?=val($totals,'ind9')?></td></tr>
+<tr><td class="ind">a. Percent (%) measured coverage (OPT Plus)</td><td><?=val($totals,'ind9a','dec2')?>%</td></tr>
+<tr><td class="ind">b. Number and percent (%) of preschool children according to Nutritional Status</td>
     <td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php $nutri=['Severely underweight','Underweight','Normal weight','Severely wasted','Wasted','Overweight','Obese','Severely stunted','Stunted'];
+<?php $nutri=['1. Severely underweight','2. Underweight','3. Normal weight','4. Severely wasted','5. Wasted','6. Overweight','7. Obese','8. Severely stunted','9. Stunted'];
 for($i=1;$i<=9;$i++): ?>
 <tr class="indent">
   <td class="ind"><?=$nutri[$i-1]?></td>
@@ -187,34 +190,41 @@ for($i=1;$i<=9;$i++): ?>
   </td>
 </tr>
 <?php endfor; ?>
-<tr><td class="ind">Total number of infants 0–5 months old</td><td><?=val($totals,'ind10')?></td></tr>
-<tr><td class="ind">Total number of infants 6–11 months old</td><td><?=val($totals,'ind11')?></td></tr>
-<tr><td class="ind">Total preschool children 0–23 months old</td><td><?=val($totals,'ind12')?></td></tr>
-<tr><td class="ind">Total preschool children 12–59 months old</td><td><?=val($totals,'ind13')?></td></tr>
-<tr><td class="ind">Total preschool children 24–59 months old</td><td><?=val($totals,'ind14')?></td></tr>
-<tr><td class="ind">Total families with wasted &amp; severely wasted preschool children</td><td><?=val($totals,'ind15')?></td></tr>
-<tr><td class="ind">Total families with stunted &amp; severely stunted preschool children</td><td><?=val($totals,'ind16')?></td></tr>
+<tr><td class="ind">10. Total number of infants 0–5 months old</td><td><?=val($totals,'ind10')?></td></tr>
+<tr><td class="ind">11. Total number of infants 6–11 months old</td><td><?=val($totals,'ind11')?></td></tr>
+<tr><td class="ind">12. Total preschool children 0–23 months old</td><td><?=val($totals,'ind12')?></td></tr>
+<tr><td class="ind">13. Total preschool children 12–59 months old</td><td><?=val($totals,'ind13')?></td></tr>
+<tr><td class="ind">14. Total preschool children 24–59 months old</td><td><?=val($totals,'ind14')?></td></tr>
+<tr><td class="ind">15. Total families with wasted &amp; severely wasted preschool children</td><td><?=val($totals,'ind15')?></td></tr>
+<tr><td class="ind">16. Total families with stunted &amp; severely stunted preschool children</td><td><?=val($totals,'ind16')?></td></tr>
 </tbody>
 </table>
 
 <div class="page-break"></div>
+  </div>
 
 <!-- ================= PAGE 2 ================= -->
+   <div class="document">
 <table>
-<thead><tr><th style="width:70%"></th><td class="number-cell"><div>.</div></td></tr></thead>
+  <colgroup>
+    <col style="width: auto;">
+    <col style="width: 180px;"> 
+  </colgroup>
 <tbody>
-<tr class="indent"><td class="ind">Total number of Educational Institutions</td><td></td></tr>
-<tr class="indent"><td class="ind">Number of Day Care Centers – Public / Private</td>
-  <td class="number-cell"><div><?=val($totals,'ind17a_public')?></div><div><?=val($totals,'ind17a_private')?></div></td></tr>
-<tr><td class="ind">Number of Elementary Schools – Public / Private</td>
-  <td class="number-cell"><div><?=val($totals,'ind17b_public')?></div><div><?=val($totals,'ind17b_private')?></div></td></tr>
-<tr><td class="ind">Total number of children enrolled in Kindergarten (DepEd supervised)</td><td><?=val($totals,'ind18')?></td></tr>
-<tr><td class="ind">Total number of school children (Grades 1–6)</td><td><?=val($totals,'ind19')?></td></tr>
-<tr><td class="ind">Total number of school children weighed at the start of the school year (K–Gr.6)</td><td><?=val($totals,'ind20')?></td></tr>
-<tr><td class="ind">Percentage (%) coverage of school children measured</td><td><?=val($totals,'ind21','dec2')?>%</td></tr>
-<tr><td class="ind">Number and percent (%) of school children according to Nutritional Status</td>
+<tr><td class="ind">17. Total number of Educational Institutions</td>
     <td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a'=>'Severely Wasted','b'=>'Wasted','c'=>'Normal','d'=>'Overweight','e'=>'Obese'] as $c=>$lbl): ?>
+<tr class="indent"><td class="ind">a. Number of Day Care Centers – Public / Private</td>
+  <td class="number-cell"><div><?=val($totals,'ind17a_public')?></div><div><?=val($totals,'ind17a_private')?></div></td></tr>
+<tr><td class="ind">b. Number of Elementary Schools – Public / Private</td>
+  <td class="number-cell"><div><?=val($totals,'ind17b_public')?></div><div><?=val($totals,'ind17b_private')?></div></td></tr>
+
+  <tr><td class="ind">18. Total number of children enrolled in Kindergarten (DepEd supervised)</td><td><?=val($totals,'ind18')?></td></tr>
+<tr><td class="ind">19. Total number of school children (Grades 1–6)</td><td><?=val($totals,'ind19')?></td></tr>
+<tr><td class="ind">20. Total number of school children weighed at the start of the school year (K–Gr.6)</td><td><?=val($totals,'ind20')?></td></tr>
+<tr><td class="ind">21. Percentage (%) coverage of school children measured</td><td><?=val($totals,'ind21','dec2')?>%</td></tr>
+<tr><td class="ind">22. Number and percent (%) of school children according to Nutritional Status</td>
+    <td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<?php foreach(['a. Severely Wasted','b. Wasted','c. Normal','d. Overweight','e. Obese'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -223,12 +233,12 @@ for($i=1;$i<=9;$i++): ?>
   </td>
 </tr>
 <?php endforeach; ?>
-<tr><td class="ind">0–5 months old children exclusively breastfed</td><td><?=val($totals,'ind23')?></td></tr>
-<tr><td class="ind">Households with severely wasted and wasted school children</td><td><?=val($totals,'ind24')?></td></tr>
-<tr><td class="ind">School children dewormed at start of school year</td><td><?=val($totals,'ind25')?></td></tr>
-<tr><td class="ind">Fully immunized children</td><td><?=val($totals,'ind26')?></td></tr>
-<tr><td class="ind">Households by type of toilet facility:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a'=>'Water-sealed toilet','b'=>'Antipolo (Unsanitary Toilet)','c'=>'Open Pit/Shared','d'=>'No Toilet'] as $c=>$lbl): ?>
+<tr><td class="ind">23. 0–5 months old children exclusively breastfed</td><td><?=val($totals,'ind23')?></td></tr>
+<tr><td class="ind">24. Households with severely wasted and wasted school children</td><td><?=val($totals,'ind24')?></td></tr>
+<tr><td class="ind">25. School children dewormed at start of school year</td><td><?=val($totals,'ind25')?></td></tr>
+<tr><td class="ind">26. Fully immunized children</td><td><?=val($totals,'ind26')?></td></tr>
+<tr><td class="ind">27. Households by type of toilet facility:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<?php foreach(['a. Water-sealed toilet','b. Antipolo (Unsanitary Toilet)','c. Open Pit/Shared','d. No Toilet'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -237,17 +247,8 @@ for($i=1;$i<=9;$i++): ?>
   </td>
 </tr>
 <?php endforeach; ?>
-</tbody>
-</table>
-
-<div class="page-break"></div>
-
-<!-- ================= PAGE 3 ================= -->
-<table>
-<thead><tr><th style="width:70%"></th><td class="number-cell"><div>.</div></td></tr></thead>
-<tbody>
-<tr><td class="ind">Households by type of garbage disposal:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a'=>'Barangay/City garbage collection','b'=>'Own compose pit','c'=>'Burning','d'=>'Dumping'] as $c=>$lbl): ?>
+<tr><td class="ind">28. Households by type of garbage disposal:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<?php foreach(['a. Barangay/City garbage collection','b. Own compose pit','c. Burning','d. Dumping'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -256,8 +257,23 @@ for($i=1;$i<=9;$i++): ?>
   </td>
 </tr>
 <?php endforeach; ?>
-<tr><td class="ind">Households by type of water source:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a'=>'Pipe water system','b'=>'Well – Level II','c'=>'Deep well with topstand communal source water system (Level II)','d'=>'Mineral water/water dispensing stores','e'=>'Open shallow dug well (Level I)'] as $c=>$lbl): ?>
+</tbody>
+</table>
+
+<div class="page-break"></div>
+  </div>
+
+<!-- ================= PAGE 3 ================= -->
+    <div class="document">
+<table>
+  <colgroup>
+    <col style="width: auto;">
+    <col style="width: 180px;"> 
+  </colgroup>
+<tbody>
+
+<tr><td class="ind">29. Households by type of water source:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<?php foreach(['a. Pipe water system','b. Spring – Level II','c. Deep well with topstand communal source water system (Level II)','d. Deep Well With Individual Faucet (Level III)','e. Purified Station (Level III)','f. Open shallow dug well (Level I)', 'g. Artesian Well '] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -265,9 +281,10 @@ for($i=1;$i<=9;$i++): ?>
     <div><?=val($totals,"ind29{$c}_pct",'pct')?></div>
   </td>
 </tr>
+
 <?php endforeach; ?>
-<tr><td class="ind">Household with:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a'=>'Vegetable garden','b'=>'Livestock/poultry','c'=>'Fishponds','d'=>'No garden'] as $c=>$lbl): ?>
+<tr><td class="ind">30. Household with:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<?php foreach(['a. Vegetable garden','b. Livestock/poultry','c. Fishponds','d. No garden'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -276,8 +293,8 @@ for($i=1;$i<=9;$i++): ?>
   </td>
 </tr>
 <?php endforeach; ?>
-<tr><td class="ind">Households according to type of dwelling unit</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a'=>'Concrete','b'=>'Semi concrete','c'=>'Wooden house','d'=>'Nipa bamboo house','e'=>'Barong-barong makeshift'] as $c=>$lbl): ?>
+<tr><td class="ind">31. Households according to type of dwelling unit</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<?php foreach(['a. Concrete','b. Semi concrete','c. Wooden house','d. Nipa bamboo house','e. Barong-barong makeshift'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -286,16 +303,19 @@ for($i=1;$i<=9;$i++): ?>
   </td>
 </tr>
 <?php endforeach; ?>
-<tr><td class="ind">Total number of households using iodized salt</td><td class="number-cell"><div><?=val($totals,'ind32_no')?></div><div><?=val($totals,'ind32_pct','pct')?></div></td></tr>
-<tr><td class="ind">Total number of eateries/carenderia</td><td class="number-cell"><div><?=val($totals,'ind33_no')?></div><div><?=val($totals,'ind33_pct','pct')?></div></td></tr>
-<tr><td class="ind">Total number of bakeries</td><td class="number-cell"><div><?=val($totals,'ind34_no')?></div><div><?=val($totals,'ind34_pct','pct')?></div></td></tr>
-<tr><td class="ind">Total number of sari-sari stores</td><td class="number-cell"><div><?=val($totals,'ind35_no')?></div><div><?=val($totals,'ind35_pct','pct')?></div></td></tr>
-<tr><td class="ind">Total Number of Bakery With Fortified Flour</td><td class="number-cell"><div><?=val($totals,'ind36_no')?></div><div><?=val($totals,'ind36_pct','pct')?></div></td></tr>
-<tr><td class="ind">Number of health and nutrition workers:</td><td></td></tr>
-<tr class="indent"><td class="ind">Barangay Nutrition Scholar</td><td><?=val($totals,'ind37a')?></td></tr>
-<tr class="indent"><td class="ind">Barangay Health Worker</td><td><?=val($totals,'ind37b')?></td></tr>
-<tr><td class="ind">Total number of households beneficiaries of Pantawid Pamilyang Pilipino</td><td><?=val($totals,'ind38')?></td></tr>
+
+<tr><td class="ind">32. Total number of households using iodized salt</td><td><?=val($totals,'ind32')?></td></tr>
+<tr><td class="ind">33. Total number of eateries/carenderia</td><td><?=val($totals,'ind33')?></td></tr>
+<tr><td class="ind">34. Total number of bakeries</td><td><?=val($totals,'ind34')?></td></tr>
+<tr><td class="ind">35. Total number of sari-sari stores</td><td><?=val($totals,'ind35')?></td></tr>
+<tr><td class="ind">36. Total Number of Bakery With Fortified Flour</td><td><?=val($totals,'ind36')?></td></tr>
+
+<tr><td class="ind">37. Number of health and nutrition workers:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<tr class="indent"><td class="ind">a. Barangay Nutrition Scholar</td><td><?=val($totals,'ind37a')?></td></tr>
+<tr class="indent"><td class="ind">b. Barangay Health Worker</td><td><?=val($totals,'ind37b')?></td></tr>
+<tr><td class="ind">38. Total number of households beneficiaries of Pantawid Pamilyang Pilipino</td><td><?=val($totals,'ind38')?></td></tr>
 </tbody>
+  </div>
 </table>
 </div>
 </body>
