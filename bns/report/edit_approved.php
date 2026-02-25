@@ -224,10 +224,10 @@ function copyTitle() {
     <tr><td>7. Total Number of Households With Preschool Children 0-59 Months</td>
         <td><input type="number" name="ind7" value="<?= $has_bns ? htmlspecialchars($row['ind7']) : '' ?>" style="width:100px;"></td>
     </tr>
-    <tr><td>8. Actual Population of Preschool Children 0-59 Months</td>
+    <tr><td>8. Estimated Population of Preschool Children 0-59 Months</td>
         <td><input type="number" name="ind8" value="<?= $has_bns ? htmlspecialchars($row['ind8']) : '' ?>" style="width:100px;"></td>
     </tr>
-        <tr><td>9. Total Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td>
+        <tr><td>9. Actual Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td>
         <td><input type="number" name="ind9" value="<?= $has_bns ? htmlspecialchars($row['ind9']) : '' ?>" style="width:100px;"></td>
     </tr>
     <tr><td>a. Percent (%) Measured Coverage (OPT Plus)</td>
@@ -240,7 +240,7 @@ function copyTitle() {
     $nutri = ['Severely underweight','Underweight','Normal weight','Severely wasted','Wasted','Overweight','Obese','Severely stunted','Stunted'];
     for ($i=1;$i<=9;$i++): ?>
     <tr class="indent">
-        <td><?= $i.') '.$nutri[$i-1] ?></td>
+        <td><?= $i.'. '.$nutri[$i-1] ?></td>
         <td class="number-cell">
             <div><input type="number" name="ind9b<?= $i ?>_no" value="<?= $has_bns ? htmlspecialchars($row["ind9b{$i}_no"]) : '' ?>" style="width:70px;"></div>
             <div><input type="text" name="ind9b<?= $i ?>_pct" value="<?= $has_bns ? htmlspecialchars($row["ind9b{$i}_pct"]) : '' ?>" style="width:70px;"></div>
@@ -477,76 +477,24 @@ function copyTitle() {
 
     <tr class="indent">
  <tr>
-  <td>33. Total Number of Eateries/Carenderia</td>
-  <td class="number-cell">
-    <div>
-      <input type="number" 
-             name="ind33_no" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind33_no'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-    <div>
-      <input type="text" 
-             name="ind33_pct" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind33_pct'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-  </td>
-</tr>
 
-<tr>
-  <td>34. Total Number Sari-Sari Stores Related Iodized Salt</td>
-  <td class="number-cell">
-    <div>
-      <input type="number" 
-             name="ind34_no" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind34_no'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-    <div>
-      <input type="text" 
-             name="ind34_pct" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind34_pct'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-  </td>
-</tr>
 
-<tr>
-  <td>35. Total Number of Sari-Sari Stores Related to Cooking Oil</td>
-  <td class="number-cell">
-    <div>
-      <input type="number" 
-             name="ind35_no" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind35_no'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-    <div>
-      <input type="text" 
-             name="ind35_pct" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind35_pct'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-  </td>
-</tr>
-
-<tr>
-  <td>36. Total Number of Bakery With Fortified Flour</td>
-  <td class="number-cell">
-    <div>
-      <input type="number" 
-             name="ind36_no" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind36_no'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-    <div>
-      <input type="text" 
-             name="ind36_pct" 
-             value="<?= $has_bns ? htmlspecialchars($row['ind36_pct'] ?? '') : '' ?>" 
-             style="width:70px;">
-    </div>
-  </td>
-</tr>
+     <tr><td>32. Total Number of Households Using Iodized Salt</td>
+        <td><input type="number" name="ind23" value="<?= $has_bns ? htmlspecialchars($row['ind32']) : '' ?>" style="width:100px;"></td>
+    </tr>
+    <tr><td>33. Total Number of Eateries/Carenderia</td>
+        <td><input type="number" name="ind23" value="<?= $has_bns ? htmlspecialchars($row['ind33']) : '' ?>" style="width:100px;"></td>
+    </tr>
+    <tr><td>34. Total Number Sari-Sari Stores Related Iodized Salt</td>
+        <td><input type="number" name="ind24" value="<?= $has_bns ? htmlspecialchars($row['ind34']) : '' ?>" style="width:100px;"></td>
+    </tr>
+    <tr><td>35. Total Number of Sari-Sari Stores Related to Cooking Oil</td>
+        <td><input type="number" name="ind25" value="<?= $has_bns ? htmlspecialchars($row['ind35']) : '' ?>" style="width:100px;"></td>
+    </tr>
+    <tr><td>36. Total Number of Bakery With Fortified Flour</td>
+        <td><input type="number" name="ind26" value="<?= $has_bns ? htmlspecialchars($row['ind36']) : '' ?>" style="width:100px;"></td>
+    </tr>
+    
 
       <td>37. Number of Health and Nutrition Workers:</td>
       <td></td>
