@@ -203,8 +203,8 @@ $p1[] = [
 ];
 // Nutrition indicators
 
-$nutri = ['1. Severely Underweight','2. Underweight','3. Normal Weight','4. Severely Wasted','5. Wasted','6. Overweight','7. Obese','8. Severely Stunted','9. Stunted'];
-for($i=1;$i<=9;$i++){
+$nutri = ['1. Severely Underweight','2. Underweight','3. Normal Weight','4. Severely Wasted','5. Wasted','6. Overweight','7. Obese'];
+for($i=1;$i<=7;$i++){
     $p1[] = [$nutri[$i-1], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
 
 }
@@ -216,7 +216,13 @@ $pdf->AddPage();
 $pdf->SetTopMargin(12); // Move content up to use space at top
 $pdf->SetY(12);         // Start writing closer to top
 $p2 = [];
+// Nutrition indicators
 
+$nutri = ['8. Severely Stunted','9. Stunted'];
+for($i=1;$i<=2;$i++){
+    $p2[] = [$nutri[$i-1], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
+
+}
 $p2 = array_merge($p2, [
     ['10. Total Number of Infants 0–5 Months Old', val($totals,'ind10')],
     ['11. Total Number of Infants 6–11 Months Old', val($totals,'ind11')],
@@ -253,14 +259,15 @@ for($i=0;$i<count($school);$i++){
 }
 $p2[] = ['23. 0–5 Months Old Children Exclusively Breastfed', val($totals,'ind23'), ''];
 $p2[] = ['24. Households with Severely Wasted School Children', val($totals,'ind24'), ''];
-$p2[] = ['25. School Children Dewormed at Start of School Year', val($totals,'ind25'), ''];
-$p2[] = ['26. Fully Immunized Children (FIC)', val($totals,'ind26'), ''];
 
 $pdf->writeHTML(makeTable($p2, false, true), true, false, false, false, '');
 
 // ---------- PAGE 3 ----------
 $pdf->AddPage();
 $p3 = [];
+$p3[] = ['25. School Children Dewormed at Start of School Year', val($totals,'ind25'), ''];
+$p3[] = ['26. Fully Immunized Children (FIC)', val($totals,'ind26'), ''];
+
 $p3[] = [
     '27. Households by type of toilet facility:',
     'No.',
@@ -316,7 +323,7 @@ $p3[] = [
     'No.',
     '%'
 ];
-$dwelling = ['a. Concrete','b. Semi Concrete','c. Wooden House','d. Nipa Bamboo House','e. Barong-Barong Makeshift','f. Makeshift'];
+$dwelling = ['a. Concrete','b. Semi Concrete'];
 for($i=0;$i<count($dwelling);$i++){
     $c = chr(97 + $i);
     $p3[] = [$dwelling[$i], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
@@ -327,6 +334,12 @@ $pdf->writeHTML(makeTable($p3, false, true), true, false, false, false, '');
 //Page 4 (if needed)
 $pdf->AddPage();
 $p4 = [];
+
+$dwelling = ['c. Wooden House','d. Nipa Bamboo House','e. Barong-Barong Makeshift','f. Makeshift'];
+for($i=0;$i<count($dwelling);$i++){
+    $c = chr(97 + $i);
+    $p4[] = [$dwelling[$i], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
+}
 
 // Number-only indicators
 $p4[] = ['32. Total Number of Households Using Iodized Salt', val($totals,'ind32')];
