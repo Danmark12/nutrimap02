@@ -216,7 +216,9 @@ table th:nth-child(2) {
   </tr>
   </thead>
   <tbody>
-  <tr><td>1. Total Population</td><td><?= $has_bns ? val($row,'ind1','int') : '—' ?></td></tr>
+  <tr><td>1. Total Population</td><td>
+  <input type="number" name="ind1" value="<?= $has_bns ? val($row,'ind1','int') : 0 ?>" readonly>
+</td></tr>
     <tr class="indent"><td>Male</td><td><?= $has_bns ? val($row,'ind_male','int') : '—' ?></td></tr>
   <tr class="indent"><td>Female</td><td><?= $has_bns ? val($row,'ind_female','int') : '—' ?></td></tr>
 
@@ -416,6 +418,7 @@ table th:nth-child(2) {
   </colgroup>
   <tbody>
 
+  
   <tr>
     <td>29. Household, by Type of Water Source</td>
     <td class="number-cell">
@@ -502,6 +505,147 @@ table th:nth-child(2) {
 
   <div class="page-number">Page 3</div>
   </div>
+
+
+<script>
+// Get the input elements
+const ind8 = document.querySelector("input[name='ind8']"); // Estimated Population
+const ind9 = document.querySelector("input[name='ind9']"); // Actual Measured
+const ind9a = document.querySelector("input[name='ind9a']"); // Percent Measured Coverage
+
+// Function to compute percentage
+function computeMeasuredCoverage() {
+    const total = parseFloat(ind8.value) || 0;
+    const measured = parseFloat(ind9.value) || 0;
+
+    ind9a.value = total > 0 ? ((measured / total) * 100).toFixed(2) : 0;
+}
+
+// Add event listeners on input change
+[ind8, ind9].forEach(input => {
+    input.addEventListener('input', computeMeasuredCoverage);
+});
+
+// Total measured preschool children (ind9)
+const ind9Total = document.querySelector("input[name='ind9']");
+
+// Loop through ind9b1 to ind9b9
+for (let i = 1; i <= 9; i++) {
+    const noInput = document.querySelector(`input[name='ind9b${i}_no']`);
+    const pctInput = document.querySelector(`input[name='ind9b${i}_pct']`);
+
+    // Whenever the number changes OR total changes, recalc percentage
+    [noInput, ind9Total].forEach(input => {
+        input.addEventListener('input', () => {
+            const total = parseFloat(ind9Total.value) || 0;
+            const val = parseFloat(noInput.value) || 0;
+            pctInput.value = total > 0 ? ((val / total) * 100).toFixed(2) : 0;
+        });
+    });
+}
+
+// Elements
+const ind18 = document.querySelector("input[name='ind18']");
+const ind19 = document.querySelector("input[name='ind19']");
+const ind20 = document.querySelector("input[name='ind20']");
+const ind21 = document.querySelector("input[name='ind21']");
+
+// Function to compute ind21 percentage
+function computeInd21() {
+    const val18 = parseFloat(ind18.value) || 0;
+    const val19 = parseFloat(ind19.value) || 0;
+    const val20 = parseFloat(ind20.value) || 0;
+
+    const total = val18 + val19;
+    ind21.value = val20 > 0 ? ((total / val20) * 100).toFixed(2) : 0;
+}
+
+// Add event listeners
+[ind18, ind19, ind20].forEach(input => input.addEventListener('input', computeInd21));
+
+
+// Compute ind22a_pct to ind22g_pct based on ind21
+function setupSchoolChildrenPct() {
+    for (let i = 0; i <= 6; i++) { // a-g
+        const letter = String.fromCharCode(97 + i);
+        const noInput = document.querySelector(`input[name='ind22${letter}_no']`);
+        const pctInput = document.querySelector(`input[name='ind22${letter}_pct']`);
+
+        [noInput, ind21].forEach(input => {
+            input.addEventListener('input', () => {
+                const total = parseFloat(ind21.value) || 0;
+                const val = parseFloat(noInput.value) || 0;
+                pctInput.value = total > 0 ? ((val / total) * 100).toFixed(2) : 0;
+            });
+        });
+    }
+}
+
+// Initialize
+setupSchoolChildrenPct();
+
+
+
+// Total households (ind2)
+const ind2Total = document.querySelector("input[name='ind2']");
+
+// Helper function to auto-compute percentages for a section
+function setupPercentCalculation(sectionPrefix, count, totalInput) {
+    for (let i = 0; i < count; i++) {
+        const letter = String.fromCharCode(97 + i); // a, b, c, ...
+        const noInput = document.querySelector(`input[name='${sectionPrefix}${letter}_no']`);
+        const pctInput = document.querySelector(`input[name='${sectionPrefix}${letter}_pct']`);
+
+        [noInput, totalInput].forEach(input => {
+            input.addEventListener('input', () => {
+                const total = parseFloat(totalInput.value) || 0;
+                const val = parseFloat(noInput.value) || 0;
+                pctInput.value = total > 0 ? ((val / total) * 100).toFixed(2) : 0;
+            });
+        });
+    }
+}
+
+// Setup all the sections that use ind2 as denominator
+setupPercentCalculation('ind27', 5, ind2Total); // a-e
+setupPercentCalculation('ind28', 4, ind2Total); // a-d
+setupPercentCalculation('ind29', 7, ind2Total); // a-g
+setupPercentCalculation('ind30', 4, ind2Total); // a-d
+setupPercentCalculation('ind31', 6, ind2Total); // a-f
+
+// Select all number inputs
+const numberInputs = document.querySelectorAll('input[type="number"]');
+
+// Add keypress validation to prevent letters
+numberInputs.forEach(input => {
+    input.addEventListener('keypress', function(e) {
+        const char = String.fromCharCode(e.which);
+        const isNumber = /[0-9]/.test(char);
+        const isDecimal = char === '.' && !this.value.includes('.');
+        if (!isNumber && !isDecimal) {
+            e.preventDefault(); // block any other character
+        }
+    });
+
+    // Optional: prevent pasting non-numeric values
+    input.addEventListener('paste', function(e) {
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        if (!/^\d*\.?\d*$/.test(paste)) {
+            e.preventDefault();
+        }
+    });
+});
+
+
+// // Disable all calculated percentage fields
+// const calculatedFields = document.querySelectorAll("input[name='ind1'],input[name='ind9a'], input[name='ind21'], input[type='number'][name$='_pct']");
+
+// // Loop and disable
+// calculatedFields.forEach(input => {
+//     input.disabled = true; // disables typing but keeps the original color
+// });
+</script>
+
 
   </body>
   </html>

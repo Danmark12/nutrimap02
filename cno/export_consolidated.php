@@ -80,6 +80,76 @@ $stmt->execute($params);
 $totals = $stmt->fetch(PDO::FETCH_ASSOC);
 if(!$totals) die('No data to export');
 
+
+// ---------- Computed Indicators ----------
+// a. Percent Measured Coverage (OPT Plus) = ind9 / ind8 * 100
+
+if (!empty($totals['ind8']) && $totals['ind8'] > 0) {
+    $totals['ind9a'] = ($totals['ind9'] / $totals['ind8']) * 100;
+} else {
+    $totals['ind9a'] = 0;
+}
+
+// ---------- Compute Nutritional Status Percentages (ind9b) ----------
+for ($i = 1; $i <= 9; $i++) {
+    $noKey  = "ind9b{$i}_no";
+    $pctKey = "ind9b{$i}_pct";
+
+    if (!empty($totals['ind9']) && $totals['ind9'] > 0) {
+        $value = isset($totals[$noKey]) ? $totals[$noKey] : 0;
+        $totals[$pctKey] = ($value / $totals['ind9']) * 100;
+    } else {
+        $totals[$pctKey] = 0;
+    }
+}
+
+// ---------- School-based Percentages ----------
+
+// 1. Percentage Coverage of School Children Measured (ind21)
+if (!empty($totals['ind20']) && $totals['ind20'] > 0) {
+    $totals['ind21'] = (($totals['ind18'] + $totals['ind19']) / $totals['ind20']) * 100;
+} else {
+    $totals['ind21'] = 0;
+}
+
+// 2. Nutritional Status of School Children Percentages (ind22a – ind22g)
+$schoolIndicators = ['a','b','c','d','e','f','g']; // ind22a – ind22g
+
+foreach($schoolIndicators as $letter){
+    $noKey  = "ind22{$letter}_no";
+    $pctKey = "ind22{$letter}_pct";
+
+    if (!empty($totals['ind21']) && $totals['ind21'] > 0 && !empty($totals[$noKey])) {
+        $totals[$pctKey] = ($totals[$noKey] / $totals['ind21']) * 100;
+    } else {
+        $totals[$pctKey] = 0;
+    }
+}
+
+// ---------- Household-based Percentages ----------
+// Denominator: ind2 (Number of Households)
+$householdIndicators = [
+    'ind27' => ['a','b','c','d','e'],       // toilet facilities
+    'ind28' => ['a','b','c','d'],           // garbage disposal
+    'ind29' => ['a','b','c','d','e','f','g'], // water source
+    'ind30' => ['a','b','c','d'],           // household/farming
+    'ind31' => ['a','b','c','d','e','f'],   // dwelling unit types
+];
+
+foreach($householdIndicators as $prefix => $letters){
+    foreach($letters as $l){
+        $noKey  = $prefix.$l.'_no';
+        $pctKey = $prefix.$l.'_pct';
+        
+        if (!empty($totals['ind2']) && $totals['ind2'] > 0 && !empty($totals[$noKey])) {
+            $totals[$pctKey] = ($totals[$noKey] / $totals['ind2']) * 100;
+        } else {
+            $totals[$pctKey] = 0;
+        }
+    }
+}
+
+
 // ---------- TCPDF Setup ----------
 class MYPDF extends TCPDF {
     public $reportYear = null;
