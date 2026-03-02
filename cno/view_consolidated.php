@@ -103,7 +103,7 @@ body{background:#f0f0f0;font-family:"Times New Roman",serif;font-size:12px;line-
 .header-table td{border:none;padding:4px 6px;vertical-align:middle}
 .header-left{font-weight:bold;font-size:14px}
 .header-logos{text-align:right}
-.header-logos img{height:60px;margin-left:6px}
+.header-logos img{height:60px;margin-left:10px}
 .report-info{text-align:center;margin-bottom:20px;font-size:12px}
 table{width:100%;border-collapse:collapse;margin-bottom:15px;table-layout:fixed}
 th,td{border:1px solid #000;padding:6px 8px;text-align:left;font-size:12px;vertical-align:top}
@@ -224,7 +224,7 @@ for($i=1;$i<=9;$i++): ?>
 <tr><td class="ind">21. Percentage (%) coverage of school children measured</td><td><?=val($totals,'ind21','dec2')?>%</td></tr>
 <tr><td class="ind">22. Number and percent (%) of school children according to Nutritional Status</td>
     <td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a. Severely Wasted','b. Wasted','c. Normal','d. Overweight','e. Obese'] as $c=>$lbl): ?>
+<?php foreach(['a'=>'a. Severely Wasted','b'=>'b. Wasted','c'=>'c. Normal','d'=>'d. Overweight','e'=>'e. Obese'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -238,7 +238,7 @@ for($i=1;$i<=9;$i++): ?>
 <tr><td class="ind">25. School children dewormed at start of school year</td><td><?=val($totals,'ind25')?></td></tr>
 <tr><td class="ind">26. Fully immunized children</td><td><?=val($totals,'ind26')?></td></tr>
 <tr><td class="ind">27. Households by type of toilet facility:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a. Water-sealed toilet','b. Antipolo (Unsanitary Toilet)','c. Open Pit/Shared','d. No Toilet'] as $c=>$lbl): ?>
+<?php foreach(['a'=>'a. Water-sealed toilet','b'=>'b. Antipolo (Unsanitary Toilet)','c'=>'c. Open Pit/Shared','d'=>'d. No Toilet'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -248,7 +248,7 @@ for($i=1;$i<=9;$i++): ?>
 </tr>
 <?php endforeach; ?>
 <tr><td class="ind">28. Households by type of garbage disposal:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a. Barangay/City garbage collection','b. Own compose pit','c. Burning','d. Dumping'] as $c=>$lbl): ?>
+<?php foreach(['a'=>'a. Barangay/City garbage collection','b'=>'b. Own compose pit','c'=>'c. Burning','d'=>'d. Dumping'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -273,7 +273,7 @@ for($i=1;$i<=9;$i++): ?>
 <tbody>
 
 <tr><td class="ind">29. Households by type of water source:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a. Pipe water system','b. Spring – Level II','c. Deep well with topstand communal source water system (Level II)','d. Deep Well With Individual Faucet (Level III)','e. Purified Station (Level III)','f. Open shallow dug well (Level I)', 'g. Artesian Well '] as $c=>$lbl): ?>
+<?php foreach(['a'=>'a. Pipe water system','b'=>'b. Spring – Level II','c'=>'c. Deep well with topstand communal source water system (Level II)','d'=>'d. Deep Well With Individual Faucet (Level III)','e'=>'e. Purified Station (Level III)','e'=>'f. Open shallow dug well (Level I)', 'g'=>'g. Artesian Well '] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -284,7 +284,7 @@ for($i=1;$i<=9;$i++): ?>
 
 <?php endforeach; ?>
 <tr><td class="ind">30. Household with:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a. Vegetable garden','b. Livestock/poultry','c. Fishponds','d. No garden'] as $c=>$lbl): ?>
+<?php foreach(['a'=>'a. Vegetable garden','b'=>'b. Livestock/poultry','c'=>'c. Fishponds','d'=>'d. No garden'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -294,7 +294,7 @@ for($i=1;$i<=9;$i++): ?>
 </tr>
 <?php endforeach; ?>
 <tr><td class="ind">31. Households according to type of dwelling unit</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
-<?php foreach(['a. Concrete','b. Semi concrete','c. Wooden house','d. Nipa bamboo house','e. Barong-barong makeshift'] as $c=>$lbl): ?>
+<?php foreach(['a'=>'a. Concrete','b'=>'b. Semi concrete','c'=>'c. Wooden house','d'=>'d. Nipa bamboo house','e'=>'e. Barong-barong makeshift'] as $c=>$lbl): ?>
 <tr class="indent">
   <td class="ind"><?=$lbl?></td>
   <td class="number-cell">
@@ -309,8 +309,7 @@ for($i=1;$i<=9;$i++): ?>
 <tr><td class="ind">34. Total number of bakeries</td><td><?=val($totals,'ind34')?></td></tr>
 <tr><td class="ind">35. Total number of sari-sari stores</td><td><?=val($totals,'ind35')?></td></tr>
 <tr><td class="ind">36. Total Number of Bakery With Fortified Flour</td><td><?=val($totals,'ind36')?></td></tr>
-
-<tr><td class="ind">37. Number of health and nutrition workers:</td><td class="number-cell"><div>No.</div><div>%</div></td></tr>
+<tr><td class="ind">37. Number of health and nutrition workers:</td><td></td></tr>
 <tr class="indent"><td class="ind">a. Barangay Nutrition Scholar</td><td><?=val($totals,'ind37a')?></td></tr>
 <tr class="indent"><td class="ind">b. Barangay Health Worker</td><td><?=val($totals,'ind37b')?></td></tr>
 <tr><td class="ind">38. Total number of households beneficiaries of Pantawid Pamilyang Pilipino</td><td><?=val($totals,'ind38')?></td></tr>

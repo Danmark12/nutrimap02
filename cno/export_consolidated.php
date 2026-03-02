@@ -163,9 +163,9 @@ class MYPDF extends TCPDF {
         $this->MultiCell(60, 5, "BNS Form No. IC\nBarangay Nutrition Profile", 0, 'L', 0, 0);
 
         // Logos
-        $this->Image(__DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.jpg', 130, 8.5, 17);
-        $this->Image(__DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.jpg', 150, 8.5, 17);
-        $this->Image(__DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.jpg', 170, 8.5, 17);
+        $this->Image(__DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.jpg', 140, 8.5, 17);
+        $this->Image(__DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.jpg', 160, 8.5, 17);
+        $this->Image(__DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.jpg', 180, 8.5, 17);
 
         // Centered title
         $this->SetY(35);
