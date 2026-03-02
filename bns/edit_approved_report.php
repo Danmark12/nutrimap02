@@ -675,6 +675,38 @@ const calculatedFields = document.querySelectorAll(
 
 calculatedFields.forEach(input => input.setAttribute('readonly', true));
 ind1.readOnly = true;
+
+
+// ===== 1️⃣ Make calculated fields readonly =====
+const readonlyFields = [
+  'ind1','ind9a','ind21', 
+  ...Array.from({length:9}, (_,i)=>`ind9b${i+1}_pct`),
+  ...Array.from({length:7}, (_,i)=>`ind22${String.fromCharCode(97+i)}_pct`),
+  ...Array.from({length:5}, (_,i)=>`ind27${String.fromCharCode(97+i)}_pct`),
+  ...Array.from({length:4}, (_,i)=>`ind28${String.fromCharCode(97+i)}_pct`),
+  ...Array.from({length:7}, (_,i)=>`ind29${String.fromCharCode(97+i)}_pct`),
+  ...Array.from({length:4}, (_,i)=>`ind30${String.fromCharCode(97+i)}_pct`),
+  ...Array.from({length:6}, (_,i)=>`ind31${String.fromCharCode(97+i)}_pct`)
+];
+
+readonlyFields.forEach(name=>{
+    const el = document.querySelector(`input[name='${name}']`);
+    if(el) el.readOnly = true;
+});
+
+// ===== 2️⃣ Force number-only input for numeric fields =====
+document.querySelectorAll('input[type="number"]').forEach(input=>{
+    input.addEventListener('keypress', function(e){
+        const char = String.fromCharCode(e.which);
+        const isNumber = /[0-9]/.test(char);
+        const isDecimal = char === '.' && !this.value.includes('.');
+        if(!isNumber && !isDecimal) e.preventDefault();
+    });
+    input.addEventListener('paste', function(e){
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        if(!/^\d*\.?\d*$/.test(paste)) e.preventDefault();
+    });
+});
 </script>
 </body>
 </html>

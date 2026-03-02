@@ -221,8 +221,8 @@ $totalPages = ceil($totalReports / $limit);
                     <td><?= date("m/d/Y", strtotime($r['report_date'])) ?></td>
                     <td><span class="status"><?= htmlspecialchars($r['status']) ?></span></td>
                     <td class="actions">
-                      <a href="view_report.php?id=<?= $r['id'] ?>" class="view"><i class="fa fa-eye"></i> View</a>
-                    <a href="edit_aproved_report.php?id=<?= $r['id'] ?>" class="edit"><i class="fa fa-pen"></i> Update</a>  
+                      <a href="view_approved_report.php?id=<?= $r['id'] ?>" class="view"><i class="fa fa-eye"></i> View</a>
+                    <a href="edit_approved_report.php?id=<?= $r['id'] ?>" class="edit"><i class="fa fa-pen"></i> Update</a>  
                       <a href="?archive_id=<?= $r['id'] ?>" class="archive" onclick="return confirm('Archive this approved report?');"><i class="fa fa-archive"></i> Archive</a>
                     </td>
                   </tr>

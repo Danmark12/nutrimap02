@@ -452,7 +452,7 @@ You cannot edit this report because its status is <?= htmlspecialchars($row['sta
       <td><?= $label ?></td>
       <td class="number-cell">
         <div><input type="number" name="ind30<?= $i ?>_no" value="<?= $has_bns ? htmlspecialchars($row["ind30{$i}_no"]) : '' ?>" style="width:70px;"></div>
-        <div><input type="text" name="ind0<3?= $i ?>_pct" value="<?= $has_bns ? htmlspecialchars($row["ind30{$i}_pct"]) : '' ?>" style="width:70px;"></div>
+        <div><input type="text" name="ind30<3?= $i ?>_pct" value="<?= $has_bns ? htmlspecialchars($row["ind30{$i}_pct"]) : '' ?>" style="width:70px;"></div>
       </td>
     </tr>
     <?php $i++; endforeach; ?>
@@ -543,5 +543,172 @@ You cannot edit this report because its status is <?= htmlspecialchars($row['sta
 </form>
 </div>
 </div>
+
+
+<script>
+// ===============================
+// PREVENT NEGATIVE VALUES
+// ===============================
+document.querySelectorAll("input[type='number']").forEach(input => {
+    input.addEventListener("input", function () {
+        if (this.value < 0) this.value = 0;
+    });
+});
+
+// ===============================
+// AUTO: MALE + FEMALE = TOTAL POP
+// ===============================
+const totalPop = document.querySelector("input[name='ind1']");
+const male = document.querySelector("input[name='ind_male']");
+const female = document.querySelector("input[name='ind_female']");
+
+function computeTotalPopulation() {
+    const m = parseFloat(male.value) || 0;
+    const f = parseFloat(female.value) || 0;
+    totalPop.value = m + f;
+}
+
+[male, female].forEach(input => {
+    input.addEventListener("input", computeTotalPopulation);
+});
+
+totalPop.readOnly = true;
+
+// ===============================
+// IND9a = COVERAGE % (OPT)
+// ind9 / ind8 * 100
+// ===============================
+const ind8 = document.querySelector("input[name='ind8']");
+const ind9 = document.querySelector("input[name='ind9']");
+const ind9a = document.querySelector("input[name='ind9a']");
+
+function computeInd9a() {
+    const estimated = parseFloat(ind8.value) || 0;
+    const measured = parseFloat(ind9.value) || 0;
+
+    ind9a.value = estimated > 0
+        ? ((measured / estimated) * 100).toFixed(2)
+        : 0;
+}
+
+[ind8, ind9].forEach(input => input.addEventListener("input", computeInd9a));
+ind9a.readOnly = true;
+
+// ===============================
+// IND9b NUTRITION STATUS %
+// % = no / ind9 * 100
+// ===============================
+function computeNutritionPercent(prefix, totalFieldName) {
+    const totalField = document.querySelector(`input[name='${totalFieldName}']`);
+
+    for (let i = 1; i <= 9; i++) {
+        const noField = document.querySelector(`input[name='${prefix}${i}_no']`);
+        const pctField = document.querySelector(`input[name='${prefix}${i}_pct']`);
+
+        if (!noField || !pctField) continue;
+
+        noField.addEventListener("input", () => {
+            const total = parseFloat(totalField.value) || 0;
+            const value = parseFloat(noField.value) || 0;
+
+            pctField.value = total > 0
+                ? ((value / total) * 100).toFixed(2)
+                : 0;
+        });
+
+        pctField.readOnly = true;
+    }
+}
+
+computeNutritionPercent("ind9b", "ind9");
+
+// ===============================
+// IND21 SCHOOL COVERAGE %
+// ind20 / (ind18 + ind19) * 100
+// ===============================
+const ind18 = document.querySelector("input[name='ind18']");
+const ind19 = document.querySelector("input[name='ind19']");
+const ind20 = document.querySelector("input[name='ind20']");
+const ind21 = document.querySelector("input[name='ind21']");
+
+function computeInd21() {
+    const enrolledKinder = parseFloat(ind18.value) || 0;
+    const enrolledG1G6 = parseFloat(ind19.value) || 0;
+    const measured = parseFloat(ind20.value) || 0;
+
+    const totalEnrolled = enrolledKinder + enrolledG1G6;
+
+    ind21.value = totalEnrolled > 0
+        ? ((measured / totalEnrolled) * 100).toFixed(2)
+        : 0;
+}
+
+[ind18, ind19, ind20].forEach(input => input.addEventListener("input", computeInd21));
+ind21.readOnly = true;
+
+// ===============================
+// GENERIC FUNCTION FOR % TABLES
+// % = no / totalHouseholds * 100
+// used for ind27, ind28, ind29, ind30, ind31
+// ===============================
+function computePercentGroup(prefix, totalFieldName) {
+    const totalField = document.querySelector(`input[name='${totalFieldName}']`);
+
+    if (!totalField) return;
+
+    document.querySelectorAll(`input[name^='${prefix}'][name$='_no']`).forEach(noField => {
+        const pctFieldName = noField.name.replace("_no", "_pct");
+        const pctField = document.querySelector(`input[name='${pctFieldName}']`);
+
+        if (!pctField) return;
+
+        noField.addEventListener("input", () => {
+            const total = parseFloat(totalField.value) || 0;
+            const value = parseFloat(noField.value) || 0;
+
+            pctField.value = total > 0
+                ? ((value / total) * 100).toFixed(2)
+                : 0;
+        });
+
+        pctField.readOnly = true;
+    });
+}
+
+// total households = ind2
+computePercentGroup("ind27", "ind2");
+computePercentGroup("ind28", "ind2");
+computePercentGroup("ind29", "ind2");
+computePercentGroup("ind30", "ind2");
+computePercentGroup("ind31", "ind2");
+
+const numberInputs = document.querySelectorAll('input[type="number"]');
+
+// Add keypress validation to prevent letters
+numberInputs.forEach(input => {
+    input.addEventListener('keypress', function(e) {
+        const char = String.fromCharCode(e.which);
+        const isNumber = /[0-9]/.test(char);
+        const isDecimal = char === '.' && !this.value.includes('.');
+        if (!isNumber && !isDecimal) {
+            e.preventDefault(); // block any other character
+        }
+    });
+
+    // Optional: prevent pasting non-numeric values
+    input.addEventListener('paste', function(e) {
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        if (!/^\d*\.?\d*$/.test(paste)) {
+            e.preventDefault();
+        }
+    });
+});
+
+const calculatedFields = document.querySelectorAll(
+  "input[name='ind1'], input[name='ind9a'], input[name='ind21'], input[type='number'][name$='_pct']"
+);
+
+calculatedFields.forEach(input => input.setAttribute('readonly', true));
+</script>
 </body>
 </html>
