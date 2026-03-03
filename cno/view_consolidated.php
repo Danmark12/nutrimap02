@@ -113,7 +113,10 @@ th{background:#ddd}
 .number-cell div {flex:1;padding:4px;border-left:1px solid #000;}
 .number-cell div:first-child {border-left:none;}
 .page-number{text-align:right;font-size:12px;color:#555;margin-top:10px}
-table td:nth-child(2) {text-align: center;}
+table th:nth-child(2),
+table td:nth-child(2) {
+    text-align: center;
+}
 </style>
 </head>
 <body>
@@ -159,10 +162,12 @@ table td:nth-child(2) {text-align: center;}
 
 <!-- ================= PAGE 1 ================= -->
 <table>
-  <colgroup>
-    <col style="width: auto;">
-    <col style="width: 180px;"> 
-  </colgroup>
+  <thead>
+  <tr>
+      <th>Indicator</th>
+      <th>No.</th>
+  </tr>
+  </thead>
 <tbody>
 <tr><td class="ind">1. Total Population</td><td><?=val($totals,'ind1')?></td></tr>
 <tr class="indent"><td class="ind">Male</td><td><?=val($totals,'ind_male')?></td></tr>

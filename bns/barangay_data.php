@@ -121,7 +121,7 @@ foreach ($defaultQuarterTitles as $q => $qTitle):
                 <div class="file-meta">
                     <strong><?= htmlspecialchars($rep['report_title']) ?></strong> — <?= date("M j, Y", strtotime($rep['report_date'])) ?>
                     <div class="file-actions">
-                        <a class="file-link" href="view_report.php?id=<?= $rep['id'] ?>">View</a>
+                        <a class="file-link" href="view_approved_report.php?id=<?= $rep['id'] ?>">View</a>
                         <a class="file-link" href="./export_report.php?id=<?= $rep['id'] ?>&format=pdf">PDF</a>
                         <a class="file-link" href="./export_report.php?id=<?= $rep['id'] ?>&format=csv">CSV</a>
                     </div>

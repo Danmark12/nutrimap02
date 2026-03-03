@@ -29,8 +29,7 @@ function makeTable(array $rows, bool $hideHeader = false): string {
     if (!$hideHeader) {
         $html .= '<thead><tr>'
               .  '<th width="60%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:left;padding:2px;line-height:2;">Indicator</th>'
-              .  '<th width="20%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:center;padding:2px;line-height:2;">No.</th>'
-              .  '<th width="20%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:center;padding:2px;line-height:2;">%</th>'
+              .  '<th width="40%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:center;padding:2px;line-height:2;">No.</th>'
               .  '</tr></thead>';
     }
 

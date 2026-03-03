@@ -211,7 +211,7 @@ table th:nth-child(2) {
   <thead>
   <tr>
       <th>Indicator</th>
-      <th>Number</th>
+      <th>No.</th>
   </tr>
   </thead>
   <tbody>

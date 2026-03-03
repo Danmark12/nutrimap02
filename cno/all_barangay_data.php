@@ -52,9 +52,11 @@ foreach ($barangayOptions as $barangay) {
         SELECT r.id AS report_id, b.barangay, r.report_date AS latest_date
         FROM reports r
         JOIN bns_reports b ON r.id = b.report_id
-        WHERE b.year = ? AND b.barangay = ?
-        ORDER BY r.report_date DESC
-        LIMIT 1
+     WHERE b.year = ?
+AND b.barangay = ?
+AND r.status = 'approved'
+ORDER BY r.report_date DESC
+LIMIT 1
     ");
     $stmt->execute([$selectedYear, $barangay]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
