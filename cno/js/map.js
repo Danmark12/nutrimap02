@@ -603,7 +603,7 @@ function updateGradientScale(baseColor) {
   const noDataCell = document.createElement('div');
   noDataCell.className = 'gradient-cell';
   noDataCell.style.background = 'transparent';
-  noDataCell.style.border = '1px dashed #333';
+  noDataCell.style.border = '1px dashed #4dff00';
   noDataCell.title = 'No Data';
 
   noDataCell.addEventListener('mouseover', () => {

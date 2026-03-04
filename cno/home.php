@@ -162,7 +162,7 @@ $stmt = $pdo->prepare("
     LEFT JOIN report_archives a ON r.id = a.report_id 
         AND (a.is_deleted = 0 OR a.is_deleted IS NULL) 
         AND (a.is_archived = 0 OR a.is_archived IS NULL)
-    WHERE r.status IN ('Pending','Rejected','Approved') 
+    WHERE r.status IN ('Pending','Rejected') 
       AND r.is_submitted = 1
       AND b.year = :year
       AND {$excludeArchivedCondition}

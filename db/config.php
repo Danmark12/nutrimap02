@@ -23,7 +23,7 @@
 // 
 
 $DB_HOST = 'localhost';   
-$DB_NAME = 'nutri_sample';      
+$DB_NAME = 'nutri_db';      
 $DB_USER = 'root';        
 $DB_PASS = '';           
 $DB_CHARSET = 'utf8mb4';

@@ -89,11 +89,11 @@ function enableInputs() {
                 'ind30d_no','ind30d_pct',
                 'ind31a_no','ind31a_pct','ind31b_no','ind31b_pct','ind31c_no','ind31c_pct',
                 'ind31d_no','ind31d_pct','ind31e_no','ind31e_pct','ind31f_no','ind31f_pct',
-                'ind32_no','ind32_pct',
-                'ind33_no','ind33_pct',
-                'ind34_no','ind34_pct',
-                'ind35_no','ind35_pct',
-                'ind36_no','ind36_pct',
+                'ind32',
+                'ind33',
+                'ind34',
+                'ind35',
+                'ind36',
                 'ind37a','ind37b','ind38'
             ];
 
