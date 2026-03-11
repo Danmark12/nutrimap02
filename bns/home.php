@@ -112,21 +112,21 @@ $myReports = $stmt->fetchAll(PDO::FETCH_ASSOC);
     class="px-3 py-2 w-60 border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 focus:outline-none">
 </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div class="flex items-center h-28 gap-4 p-5 rounded-lg shadow bg-[#003d3c] text-white">
+        <div class="flex items-center h-25 gap-4 p-5 rounded-lg shadow bg-[#003d3c] text-white">
           <i class="fa fa-file-alt text-4xl"></i>
-          <h3 class="font-semibold text-2xl">Total Reports: <?= $totalReports ?></h3>
+          <h3 class="font-normal text-2xl">Total Reports: <?= $totalReports ?></h3>
         </div>
-        <div class="flex items-center h-28 gap-4 p-5 rounded-lg shadow bg-[#006d6a] text-white">
+        <div class="flex items-center h-25 gap-4 p-5 rounded-lg shadow bg-[#006d6a] text-white">
           <i class="fa fa-check-circle text-4xl"></i>
-          <h3 class="font-semibold text-2xl">Approved: <?= $approvedReports ?></h3>
+          <h3 class="font-normal text-2xl">Approved: <?= $approvedReports ?></h3>
         </div>
-        <div class="flex items-center h-28 gap-4 p-5 rounded-lg shadow bg-[#009688] text-white">
+        <div class="flex items-center h-25 gap- p-5 rounded-lg shadow bg-[#009688] text-white">
           <i class="fa fa-clock text-4xl"></i>
-          <h3 class="font-semibold text-2xl">Pending: <?= $pendingReports ?></h3>
+          <h3 class="font-normal text-2xl">Pending: <?= $pendingReports ?></h3>
         </div>
-        <div class="flex items-center h-28 gap-4 p-5 rounded-lg shadow bg-red-500 text-white">
+        <div class="flex items-center h-25 gap-4 p-5 rounded-lg shadow bg-red-500 text-white">
           <i class="fa fa-times-circle text-4xl"></i>
-          <h3 class="font-semibold text-2xl">Rejected: <?= $rejectedReports ?></h3>
+          <h3 class="font-normal text-2xl">Rejected: <?= $rejectedReports ?></h3>
         </div>
       </div>
 

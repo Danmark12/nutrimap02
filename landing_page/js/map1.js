@@ -1,13 +1,13 @@
 // ===================== INITIALIZE MAP =====================
 const map = L.map('map', {
   center: [8.4760268, 124.4809540],
-  zoom: 12,
+  zoom: 11,
   zoomControl: true,
-  dragging: false,
-  scrollWheelZoom: false,
-  doubleClickZoom: false,
-  boxZoom: false,
-  touchZoom: false
+  dragging: true,         // now you can move the map
+  scrollWheelZoom: true,  // zoom with mouse wheel
+  doubleClickZoom: true,  // zoom by double click
+  boxZoom: true,          // zoom by drawing rectangle
+  touchZoom: true         // zoom on mobile pinch
 });
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -129,6 +129,7 @@ function featureHandler(feature, layer) {
       title.className = 'tooltip-title';
       title.textContent = barangayName;
       title.style.fontWeight = 'bold';
+      title.style.fontSize = '14px';
       title.style.marginBottom = '6px';
       tooltip.appendChild(title);
 
@@ -172,7 +173,7 @@ function featureHandler(feature, layer) {
         };
       });
 
-      createChart(isMobile?'70vw':'300px', isMobile?'120px':'150px', labels, datasets, chartType);
+      createChart(isMobile?'50vw':'200px', isMobile?'100px':'150px', labels, datasets, chartType);
 
       const indicatorList = document.createElement('ul');
       indicatorList.style.listStyle='none';
@@ -196,6 +197,7 @@ function featureHandler(feature, layer) {
         liItem.appendChild(colorBox);
         liItem.appendChild(text);
         indicatorList.appendChild(liItem);
+        text.style.fontSize = '12px';
       });
 
       tooltip.appendChild(indicatorList);
@@ -247,6 +249,7 @@ legendItems.forEach(item => {
     applyLegendFilter();
     if(activeField) updateGradientScale(activeColor); else document.getElementById('gradient-grid').innerHTML='';
     renderFullChart();
+    updateLegendVisibility();
   });
 });
 
@@ -491,3 +494,15 @@ btnChartView.addEventListener('click', () => {
   renderFullChart();
 
 });
+
+function updateLegendVisibility() {
+
+  const gradientLegend = document.getElementById("gradientLegend");
+
+  if (!activeField || activeField === "ALL") {
+    gradientLegend.style.display = "block";
+  } else {
+    gradientLegend.style.display = "none";
+  }
+
+}

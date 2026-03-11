@@ -224,7 +224,9 @@ $totalPages = ceil($totalReports / $limit);
                       <a href="view_approved_report.php?id=<?= $r['id'] ?>" class="view"><i class="fa fa-eye"></i> View</a>
                     <a href="edit_approved_report.php?id=<?= $r['id'] ?>" class="edit"><i class="fa fa-pen"></i> Update</a>  
                       <a href="?archive_id=<?= $r['id'] ?>" class="archive" onclick="return confirm('Archive this approved report?');"><i class="fa fa-archive"></i> Archive</a>
-                        <a href="export_report_excel.php?id=<?= $r['id'] ?>" class="add-btn"><i class="fa fa-file-excel"></i> Excel</a>
+                      <a href="export_report.php?id=<?= $r['id'] ?>&format=pdf" class="add-btn"><i class="fa fa-file-pdf"></i> PDF</a>
+                      
+                      <a href="export_report_excel.php?id=<?= $r['id'] ?>" class="add-btn"><i class="fa fa-file-excel"></i> Excel</a>
                     </td>
                   </tr>
                 <?php endforeach; ?>

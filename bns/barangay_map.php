@@ -190,12 +190,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
         </div>
         <h2 class="text-md font-semibold mb-3">Legend</h2>
        <ul class="space-y-2 text-sm">
-  <li data-field="all" data-label="All Indicators" data-color="#4B5563" class="cursor-pointer">
+  <!-- <li data-field="all" data-label="All Indicators" data-color="#4B5563" class="cursor-pointer">
     <span class="w-4 h-4 mr-2 bg-gray-400 inline-block"></span>All
-  </li>
-  <li data-field="UNDERWEIGHT" data-label="Underweight" data-color="#FFFF00" class="cursor-pointer">
+  </li> -->
+   <li data-field="UNDERWEIGHT" data-label="Underweight" data-color="#FFFF00" class="cursor-pointer active">
     <span class="w-4 h-4 mr-2 bg-yellow-400 inline-block"></span>Underweight
   </li>
+
    <li data-field="WASTED" data-label="Wasted" data-color="#FFA500" class="cursor-pointer">
     <span class="w-4 h-4 mr-2 bg-orange-500 inline-block"></span>Wasted
   </li>

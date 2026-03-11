@@ -4,7 +4,7 @@ require '../db/config.php';
 
 // ✅ Require login
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../../login.php");
+    header("Location: ../login.php");
     exit();
 }
 
@@ -142,7 +142,7 @@ function copyTitle() {
 </div>
 <?php endif; ?>
 
-<form action="update_report.php" method="post" onsubmit="copyTitle()">
+<form action="reports.php" method="post" onsubmit="copyTitle()">
     <input type="hidden" name="report_id" value="<?= $reportId ?>">
     <input type="hidden" id="hidden-title" name="title">
 

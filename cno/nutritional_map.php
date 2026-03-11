@@ -48,7 +48,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
   display: none;
   width: 100%;
   max-width: 700px;   /* desktop width */
-  height: 500px;      /* desktop height */
+  height: 400px;      /* desktop height */
   margin: auto;
 }
 @media (max-width: 768px) {
@@ -68,8 +68,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
   padding: 8px;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  max-width: 500px;
-  max-height: 350px;
+  max-width: 250px;
+  max-height: 300px;
   overflow-y: auto;
   pointer-events: none;
   flex-direction: column;
@@ -135,7 +135,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
 
 </style>
 </head>
+
 <body class="bg-gray-50 font-sans flex flex-col min-h-screen">
+
 
   <!-- HEADER -->
   <?php include 'header.php'; ?>
@@ -145,6 +147,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
  <main class="flex-1 max-w-7xl mx-auto px-6 pt-2 pb-6 mb-28 bg-white">
     <div class="bg-gray-200 py-2 px-4 mb-4">
       <span class="uppercase tracking-wide text-cyan-600 font-semibold">Data</span>
+      
     </div>
     
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
@@ -156,16 +159,36 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
       </div>
     </div>
 
+    <!-- Place this just above #mapContainer -->
     <div class="flex flex-col lg:flex-row gap-6">
       <div class="flex-1">
+
+      
        <div id="mapContainer">
   <div id="map" class="rounded border border-gray-300 z-0"></div>
 </div>
+
+
 <div id="chartContainer" class="hidden">
-  <canvas id="fullChart" width="800" height="500"></canvas>
+<canvas id="fullChartCanvas"></canvas>
 </div>
+
       </div>
       <div id="legend-buttons" class="w-full lg:w-60 bg-gray-50 border border-gray-300 rounded p-4">
+
+<div class="flex gap-2 mb-3">
+
+  <button id="btnMapView"
+    class="view-btn px-3 py-1 text-sm border border-gray-400 text-gray-700 rounded bg-transparent hover:bg-gray-100">
+    Map
+  </button>
+
+  <button id="btnChartView"
+    class="view-btn px-3 py-1 text-sm border border-gray-400 text-gray-700 rounded bg-transparent hover:bg-gray-100">
+    Chart
+  </button>
+
+</div>
         <div>
           <label class="block text-sm font-medium text-gray-600">Select Year</label>
           <select id="yearFilter" class="mt-1 block w-32 rounded border border-gray-300 shadow-sm"></select>
