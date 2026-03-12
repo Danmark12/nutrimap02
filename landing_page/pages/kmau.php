@@ -14,7 +14,7 @@
 <body class="flex flex-col min-h-screen bg-gray-100 text-gray-800">
 
   <!-- HEADER -->
-  <header class="flex justify-between items-center px-6 md:px-10 py-4 bg-white shadow relative">
+  <header class="flex justify-between items-center px-6 md:px-10 h-14 bg-white shadow relative">
     
       <!-- Logo -->
       <div class="flex items-center text-2xl font-bold text-gray-700">

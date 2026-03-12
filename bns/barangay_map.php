@@ -24,7 +24,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
 
 /* MAP */
 #map { 
-  height: 640px; 
+  height: 320px; 
 }
 
 /* MAP & CHART CONTAINER FLIP */
@@ -53,11 +53,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
 
 /* FULL CHART */
 #chartContainer {
-  top: 250px;
+  top: 180px;
   display: none;
   width: 100%;
   max-width: 700px;   /* desktop width */
-  height: 500px;      /* desktop height */
+  height: 320px;      /* desktop height */
   margin: auto;
 }
 @media (max-width: 768px) {
@@ -77,8 +77,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
   padding: 8px;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  max-width: 500px;
-  max-height: 350px;
+  max-width: 230px;
+  max-height: 240px;
   overflow-y: auto;
   pointer-events: none;
   flex-direction: column;
@@ -190,13 +190,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
         </div>
         <h2 class="text-md font-semibold mb-3">Legend</h2>
        <ul class="space-y-2 text-sm">
-  <!-- <li data-field="all" data-label="All Indicators" data-color="#4B5563" class="cursor-pointer">
+  <li data-field="all" data-label="All Indicators" data-color="#4B5563" class="cursor-pointer">
     <span class="w-4 h-4 mr-2 bg-gray-400 inline-block"></span>All
-  </li> -->
-   <li data-field="UNDERWEIGHT" data-label="Underweight" data-color="#FFFF00" class="cursor-pointer active">
+  </li>
+  <li data-field="UNDERWEIGHT" data-label="Underweight" data-color="#FFFF00" class="cursor-pointer">
     <span class="w-4 h-4 mr-2 bg-yellow-400 inline-block"></span>Underweight
   </li>
-
    <li data-field="WASTED" data-label="Wasted" data-color="#FFA500" class="cursor-pointer">
     <span class="w-4 h-4 mr-2 bg-orange-500 inline-block"></span>Wasted
   </li>

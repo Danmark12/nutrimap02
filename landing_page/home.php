@@ -17,7 +17,7 @@
 <body class="text-gray-800">
 
   <!-- HEADER -->
-  <header class="flex justify-between items-center px-6 md:px-10 py-4 bg-white shadow relative">
+  <header class="flex justify-between items-center px-6 md:px-10 h-14 bg-white shadow relative">
     <!-- Logo -->
     <div class="flex items-center font-bold text-2xl text-gray-700">
       <img src="../img/CNO_Logo.png" alt="CNO NutriMap Logo" class="h-10 mr-2">

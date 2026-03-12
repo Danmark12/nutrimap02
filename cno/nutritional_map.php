@@ -24,7 +24,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
 
 /* MAP */
 #map { 
-  height: 640px; 
+  height: 350px; 
 }
 
 /* MAP & CHART CONTAINER FLIP */
@@ -48,7 +48,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
   display: none;
   width: 100%;
   max-width: 700px;   /* desktop width */
-  height: 400px;      /* desktop height */
+  height: 350px;      /* desktop height */
   margin: auto;
 }
 @media (max-width: 768px) {

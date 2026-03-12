@@ -203,6 +203,7 @@ function featureHandler(feature, layer) {
       title.className = 'tooltip-title';
       title.textContent = barangayName;
       title.style.fontWeight = 'bold';
+      title.style.fontSize = '12px';
       title.style.marginBottom = '6px';
       tooltip.appendChild(title);
 
@@ -236,7 +237,7 @@ function featureHandler(feature, layer) {
       });
 
       // ===== CREATE MINI CHART =====
-      createChart('300px', '150px', labels, datasets, chartType);
+      createChart('200px', '100px', labels, datasets, chartType);
 
       // ===== INDICATOR LIST =====
       const indicatorList = document.createElement('ul');
@@ -265,6 +266,7 @@ function featureHandler(feature, layer) {
 
         const text = document.createElement('span');
         text.textContent = `${li.dataset.label}: ${value.toFixed(2)}%`;
+        text.style.fontSize = '12px';
 
         liItem.appendChild(colorBox);
         liItem.appendChild(text);
