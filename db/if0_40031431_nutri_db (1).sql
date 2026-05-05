@@ -329,6 +329,7 @@ CREATE TABLE `bns_reports` (
   `ind22f_pct` decimal(5,2) DEFAULT NULL,
   `ind22g_no` int(11) DEFAULT NULL,
   `ind22g_pct` decimal(5,2) DEFAULT NULL,
+  
   `ind23` int(11) DEFAULT NULL,
   `ind24` int(11) DEFAULT NULL,
   `ind25` int(11) DEFAULT NULL,
@@ -351,6 +352,7 @@ CREATE TABLE `bns_reports` (
   `ind28c_pct` decimal(5,2) DEFAULT NULL,
   `ind28d_no` int(11) DEFAULT NULL,
   `ind28d_pct` decimal(5,2) DEFAULT NULL,
+
   `ind29a_no` int(11) DEFAULT NULL,
   `ind29a_pct` decimal(5,2) DEFAULT NULL,
   `ind29b_no` int(11) DEFAULT NULL,
@@ -365,6 +367,7 @@ CREATE TABLE `bns_reports` (
   `ind29f_pct` decimal(5,2) DEFAULT NULL,
   `ind29g_no` int(11) DEFAULT NULL,
   `ind29g_pct` decimal(5,2) DEFAULT NULL,
+
   `ind30a_no` int(11) DEFAULT NULL,
   `ind30a_pct` decimal(5,2) DEFAULT NULL,
   `ind30b_no` int(11) DEFAULT NULL,
@@ -373,6 +376,7 @@ CREATE TABLE `bns_reports` (
   `ind30c_pct` decimal(5,2) DEFAULT NULL,
   `ind30d_no` int(11) DEFAULT NULL,
   `ind30d_pct` decimal(5,2) DEFAULT NULL,
+
   `ind31a_no` int(11) DEFAULT NULL,
   `ind31a_pct` decimal(5,2) DEFAULT NULL,
   `ind31b_no` int(11) DEFAULT NULL,
@@ -385,6 +389,7 @@ CREATE TABLE `bns_reports` (
   `ind31e_pct` decimal(5,2) DEFAULT NULL,
   `ind31f_no` int(11) DEFAULT NULL,
     `ind31f_pct` decimal(5,2) DEFAULT NULL,
+
   `ind32` int(11) DEFAULT NULL,
   `ind33` int(11) DEFAULT NULL,
   `ind34` int(11) DEFAULT NULL,

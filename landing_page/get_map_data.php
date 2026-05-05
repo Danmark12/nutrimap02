@@ -15,6 +15,10 @@ $geojson = json_decode(file_get_contents($geojsonPath), true);
 $sql = "SELECT 
             b.barangay,
             b.year,
+            b.ind9 as total_measured,
+            b.ind9b1_no, b.ind9b2_no, b.ind9b3_no,
+            b.ind9b4_no, b.ind9b5_no, b.ind9b6_no,
+            b.ind9b7_no, b.ind9b8_no, b.ind9b9_no,
             b.ind9b1_pct, b.ind9b2_pct, b.ind9b3_pct,
             b.ind9b4_pct, b.ind9b5_pct, b.ind9b6_pct,
             b.ind9b7_pct, b.ind9b8_pct, b.ind9b9_pct
@@ -31,6 +35,14 @@ $mergedIndicators = [
     'WASTED' => ['IND9B4_PCT', 'IND9B5_PCT'],
     'OVERWEIGHT_OBESE' => ['IND9B6_PCT', 'IND9B7_PCT'],
     'STUNTED' => ['IND9B8_PCT', 'IND9B9_PCT']
+];
+
+// Raw counts merged for City Total
+$mergedCounts = [
+    'UNDERWEIGHT_COUNT' => ['IND9B1_NO', 'IND9B2_NO'],
+    'WASTED_COUNT' => ['IND9B4_NO', 'IND9B5_NO'],
+    'OVERWEIGHT_OBESE_COUNT' => ['IND9B6_NO', 'IND9B7_NO'],
+    'STUNTED_COUNT' => ['IND9B8_NO', 'IND9B9_NO']
 ];
 
 // 4. Group data by barangay and year
@@ -52,6 +64,18 @@ foreach ($data as $row) {
         }
         $rowUpper[$mergedKey] = $sum;
     }
+
+        // Compute merged counts for City Total
+    foreach ($mergedCounts as $mergedKey => $fields) {
+        $sum = 0;
+        foreach ($fields as $f) {
+            if (isset($rowUpper[$f])) $sum += intval($rowUpper[$f]);
+        }
+        $rowUpper[$mergedKey] = $sum;
+    }
+    
+    // Store total measured
+    $rowUpper['TOTAL_MEASURED'] = isset($rowUpper['TOTAL_MEASURED']) ? intval($rowUpper['TOTAL_MEASURED']) : 0;
 
     $lookup[$b][$y] = $rowUpper;
 }
