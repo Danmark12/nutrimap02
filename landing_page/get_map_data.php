@@ -65,7 +65,7 @@ foreach ($data as $row) {
         $rowUpper[$mergedKey] = $sum;
     }
 
-        // Compute merged counts for City Total
+    // Compute merged counts for City Total
     foreach ($mergedCounts as $mergedKey => $fields) {
         $sum = 0;
         foreach ($fields as $f) {
@@ -76,6 +76,17 @@ foreach ($data as $row) {
     
     // Store total measured
     $rowUpper['TOTAL_MEASURED'] = isset($rowUpper['TOTAL_MEASURED']) ? intval($rowUpper['TOTAL_MEASURED']) : 0;
+    
+    // Calculate ALL = maximum percentage among UNDERWEIGHT, WASTED, OVERWEIGHT_OBESE, STUNTED
+    $underweight = $rowUpper['UNDERWEIGHT'] ?? 0;
+    $wasted = $rowUpper['WASTED'] ?? 0;
+    $overweight_obese = $rowUpper['OVERWEIGHT_OBESE'] ?? 0;
+    $stunted = $rowUpper['STUNTED'] ?? 0;
+    
+    $rowUpper['ALL'] = max($underweight, $wasted, $overweight_obese, $stunted);
+    
+    // Optional: Add total malnutrition (sum of all four)
+    $rowUpper['TOTAL_MALNUTRITION'] = $underweight + $wasted + $overweight_obese + $stunted;
 
     $lookup[$b][$y] = $rowUpper;
 }

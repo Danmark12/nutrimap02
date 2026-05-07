@@ -18,6 +18,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 let geoLayer, geoData;
 let activeField = null, activeColor = null, activeLabel = null;
 let activeYear = 'All', activeBarangay = 'all';
+let activeYearFrom = null;
+let activeYearTo = null;
+let isYearRange = false;
 let miniChart = null;
 let activeGradientRange = null;
 let currentView = 'percentage';
@@ -72,83 +75,162 @@ function getCityOverallTotal(field, year = null) {
   return totalMeasured > 0 ? (totalCount / totalMeasured) * 100 : 0;
 }
 
-// ===================== LOAD GEOJSON DATA =====================
-fetch('../landing_page/get_map_data.php')
-  .then(r => r.json())
-  .then(data => {
-    geoData = data;
-
-    // Populate Year dropdown
-    const years = [...new Set(geoData.features.map(f => f.properties.YEAR).filter(y => y))].sort((a,b)=>b-a);
-    const yearSelect = document.getElementById('yearFilter');
-    yearSelect.innerHTML = '';
-
-    if (years.length >= 2) {
-      const allOpt = document.createElement('option');
-      allOpt.value = 'All';
-      allOpt.textContent = 'All Years';
-      yearSelect.appendChild(allOpt);
+// ===================== MODERN TIMELINE SLIDER =====================
+function initTimelineSlider(minYear, maxYear, availableYears) {
+  const track = document.getElementById('timelineTrack');
+  const handleLeft = document.getElementById('timelineHandleLeft');
+  const handleRight = document.getElementById('timelineHandleRight');
+  const fill = document.getElementById('timelineFill');
+  const yearLabelsContainer = document.getElementById('yearLabels');
+  
+  let currentMin = maxYear;
+  let currentMax = maxYear;
+  let activeHandle = null;
+  
+  // Populate year labels
+  if (yearLabelsContainer) {
+    yearLabelsContainer.innerHTML = '';
+    for (let year = minYear; year <= maxYear; year++) {
+      const span = document.createElement('span');
+      span.textContent = year;
+      if (availableYears.includes(year)) {
+        span.classList.add('has-data');
+        span.style.cursor = 'pointer';
+        span.addEventListener('click', () => {
+          currentMin = year;
+          currentMax = year;
+          updateFromPosition();
+        });
+      } else {
+        span.classList.add('no-data');
+        span.style.cursor = 'not-allowed';
+      }
+      yearLabelsContainer.appendChild(span);
     }
-
-    years.forEach(y => {
-      const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = y;
-      yearSelect.appendChild(opt);
-    });
-
-    if (years.length > 0) {
-      activeYear = years[0];
-      yearSelect.value = years[0];
-    } else {
-      activeYear = 'All';
-      yearSelect.value = 'All';
+  }
+  
+  function updateFromPosition() {
+    const fromPercent = ((currentMin - minYear) / (maxYear - minYear)) * 100;
+    const toPercent = ((currentMax - minYear) / (maxYear - minYear)) * 100;
+    
+    handleLeft.style.left = `${fromPercent}%`;
+    handleRight.style.left = `${toPercent}%`;
+    fill.style.left = `${fromPercent}%`;
+    fill.style.width = `${toPercent - fromPercent}%`;
+    
+    activeYearFrom = currentMin;
+    activeYearTo = currentMax;
+    isYearRange = (currentMin !== currentMax);
+    activeYear = isYearRange ? 'All' : currentMin;
+    
+    // Highlight active years in labels
+    if (yearLabelsContainer) {
+      const spans = yearLabelsContainer.querySelectorAll('span');
+      spans.forEach((span, idx) => {
+        const year = minYear + idx;
+        if (year >= currentMin && year <= currentMax && availableYears.includes(year)) {
+          span.style.backgroundColor = '#e0e7ff';
+          span.style.color = '#4f46e5';
+          span.style.fontWeight = 'bold';
+        } else {
+          span.style.backgroundColor = '';
+          span.style.color = '';
+          span.style.fontWeight = availableYears.includes(year) ? '600' : 'normal';
+        }
+      });
     }
-
-    activeBarangay = 'all';
-
-    // Initial draw
-    drawLayer(activeYear, activeBarangay);
-
-    // Set default active legend to Underweight
-    const underweightItem = legendItems.find(li => li.dataset.field === 'UNDERWEIGHT');
-    if (underweightItem) {
-      underweightItem.classList.add('active');
-      activeField = 'UNDERWEIGHT';
-      activeColor = '#FFFF00';
-      activeLabel = 'Underweight';
-      updateGradientScale(activeColor);
-      applyLegendFilter();
+    
+    drawLayer(activeYearFrom, activeYearTo, isYearRange, activeBarangay);
+    renderFullChart();
+  }
+  
+  function getPositionFromClientX(clientX) {
+    const rect = track.getBoundingClientRect();
+    let percent = (clientX - rect.left) / rect.width;
+    percent = Math.max(0, Math.min(1, percent));
+    return percent;
+  }
+  
+  function getYearFromPercent(percent) {
+    return Math.round(minYear + (percent * (maxYear - minYear)));
+  }
+  
+  function onMouseMove(e) {
+    if (!activeHandle) return;
+    const percent = getPositionFromClientX(e.clientX);
+    let newYear = getYearFromPercent(percent);
+    newYear = Math.max(minYear, Math.min(maxYear, newYear));
+    
+    if (activeHandle === 'left' && newYear <= currentMax) {
+      currentMin = newYear;
+    } else if (activeHandle === 'right' && newYear >= currentMin) {
+      currentMax = newYear;
     }
+    updateFromPosition();
+  }
+  
+  function onMouseUp() {
+    activeHandle = null;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+  
+  handleLeft.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+    activeHandle = 'left';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+  
+  handleRight.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+    activeHandle = 'right';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+  
+  track.addEventListener('click', (e) => {
+    const percent = getPositionFromClientX(e.clientX);
+    const clickedYear = getYearFromPercent(percent);
+    if (availableYears.includes(clickedYear)) {
+      const distToLeft = Math.abs(clickedYear - currentMin);
+      const distToRight = Math.abs(clickedYear - currentMax);
+      if (distToLeft < distToRight) {
+        currentMin = clickedYear;
+        if (currentMin > currentMax) currentMin = currentMax;
+      } else {
+        currentMax = clickedYear;
+        if (currentMax < currentMin) currentMax = currentMin;
+      }
+      updateFromPosition();
+    }
+  });
+  
+  updateFromPosition();
+}
 
-    yearSelect.addEventListener('change', e => {
-      activeYear = e.target.value;
-      drawLayer(activeYear, activeBarangay);
-      renderFullChart();
-    });
-  })
-  .catch(err => console.error('Error loading map data:', err));
 
 // ===================== DRAW LAYER =====================
-function drawLayer(selectedYear, selectedBarangay) {
+function drawLayer(yearFrom, yearTo, isRange, selectedBarangay) {
   if (!geoData) return;
-
-  const year = selectedYear || activeYear;
-  const barangay = selectedBarangay || activeBarangay;
-
   if (geoLayer) map.removeLayer(geoLayer);
 
   let features = geoData.features;
 
-  if (year !== 'All') {
-    features = features.filter(f => String(f.properties.YEAR) === String(year));
+  if (isRange && yearFrom && yearTo) {
+    features = features.filter(f => {
+      const year = parseInt(f.properties.YEAR);
+      return year >= yearFrom && year <= yearTo;
+    });
+  } else if (yearFrom && !isRange) {
+    features = features.filter(f => String(f.properties.YEAR) === String(yearFrom));
   }
 
   let isCityTotal = false;
-  if (barangay === 'city_total') {
+  if (selectedBarangay === 'city_total') {
     isCityTotal = true;
-  } else if (barangay !== 'all') {
-    features = features.filter(f => (f.properties.BARANGAY || '').trim().toLowerCase() === barangay);
+  } else if (selectedBarangay !== 'all') {
+    features = features.filter(f => (f.properties.BARANGAY || '').trim().toLowerCase() === selectedBarangay);
   }
 
   geoLayer = L.geoJSON({ type: "FeatureCollection", features }, {
@@ -173,11 +255,9 @@ function styleFeature(feature) {
     if (val === 0 || val == null || props.NO_DATA === true) {
       return { color:'#444', weight:1, fillOpacity:0, fillColor:'transparent', dashArray:'2,2' };
     }
-
     let step = Math.floor(val / 2);
     if (step < 0) step = 0;
     if (step > 9) step = 9;
-
     return { color:'#000', weight:2, fillOpacity:0.8, fillColor:getGradientColor(activeColor, step+1) };
   }
 
@@ -207,9 +287,14 @@ function featureHandler(feature, layer) {
       title.style.marginBottom = '6px';
       tooltip.appendChild(title);
 
-      let indicatorsToShow = activeField
-        ? legendItems.filter(li => li.dataset.field.toUpperCase() === activeField)
-        : legendItems;
+      let indicatorsToShow;
+      if (activeField === 'ALL') {
+        indicatorsToShow = legendItems.filter(li => li.dataset.field !== 'ALL' && li.dataset.field !== 'all');
+      } else if (activeField) {
+        indicatorsToShow = legendItems.filter(li => li.dataset.field.toUpperCase() === activeField);
+      } else {
+        indicatorsToShow = legendItems;
+      }
 
       let hasData = indicatorsToShow.some(li => {
         const val = feature.properties[li.dataset.field.toUpperCase()] ?? 0;
@@ -298,7 +383,6 @@ function featureHandler(feature, layer) {
         }, plugins:[ChartDataLabels]});
       }
     },
-
     mouseout(e){
       tooltip.style.opacity=0;
       tooltip.style.display='none';
@@ -308,21 +392,53 @@ function featureHandler(feature, layer) {
   });
 }
 
+fetch('../landing_page/get_map_data.php')
+  .then(r => r.json())
+  .then(data => {
+    geoData = data;
+
+    const years = [...new Set(geoData.features.map(f => f.properties.YEAR).filter(y => y))].sort((a,b)=>a-b);
+    const minYear = years.length > 0 ? Math.min(...years) : 2020;
+    const maxYear = years.length > 0 ? Math.max(...years) : 2026;
+    
+    initTimelineSlider(minYear, maxYear, years);
+    activeBarangay = 'all';
+    
+    const allItem = legendItems.find(li => li.dataset.field === 'ALL');
+    if (allItem) {
+      allItem.classList.add('active');
+      activeField = 'ALL';
+      activeColor = '#888888';
+      activeLabel = 'All Indicators';
+      updateGradientScale(activeColor);
+      applyLegendFilter();
+    }
+    
+    // Force map to refresh after loading
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
+    
+    // Also refresh on window resize
+    window.addEventListener('resize', () => {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    });
+  })
+  .catch(err => console.error('Error loading map data:', err));
 // ===================== ADD VIEW BUTTONS =====================
 const chartContainerDiv = document.getElementById('chartContainer');
 const toggleButtonContainer = document.createElement('div');
 toggleButtonContainer.className = 'view-toggle-container';
 toggleButtonContainer.innerHTML = `
-  <button id="btnPercentageView" class="view-toggle-btn active">
-    Barangay View
-  </button>
-  <button id="btnCityTotalView" class="view-toggle-btn">
-    City View
-  </button>
+  <button id="btnPercentageView" class="view-toggle-btn active">Barangay View</button>
+  <button id="btnCityTotalView" class="view-toggle-btn">City View</button>
 `;
 chartContainerDiv.insertBefore(toggleButtonContainer, chartContainerDiv.firstChild);
 
 const btnPercentageView = document.getElementById('btnPercentageView');
+const btnCityTotalView = document.getElementById('btnCityTotalView');
 
 btnPercentageView.addEventListener('click', () => {
   btnPercentageView.classList.add('active');
@@ -330,12 +446,53 @@ btnPercentageView.addEventListener('click', () => {
   
   const barangaySelect = document.getElementById('barangayFilter');
   barangaySelect.disabled = false;
-  barangaySelect.value = 'All';
-  activeBarangay = 'all';
+  
+  const previousBarangay = window.previousBarangay || 'all';
+  if (previousBarangay === 'city_total' || previousBarangay === 'all') {
+    barangaySelect.value = 'All';
+    activeBarangay = 'all';
+  } else {
+    barangaySelect.value = previousBarangay.charAt(0).toUpperCase() + previousBarangay.slice(1);
+    activeBarangay = previousBarangay;
+  }
   
   currentView = 'percentage';
   
-  drawLayer(activeYear, activeBarangay);
+  if (!activeField) {
+    const allItem = legendItems.find(li => li.dataset.field === 'ALL');
+    if (allItem) {
+      legendItems.forEach(li => li.classList.remove('active'));
+      allItem.classList.add('active');
+      activeField = 'ALL';
+      activeColor = '#888888';
+      activeLabel = 'All Indicators';
+      updateGradientScale(activeColor);
+    }
+  }
+  
+  drawLayer(activeYearFrom, activeYearTo, isYearRange, activeBarangay);
+  applyLegendFilter();
+  
+  if (!mapContainer.classList.contains('flipped')) {
+    flipToMap();
+  } else {
+    renderFullChart();
+  }
+});
+
+btnCityTotalView.addEventListener('click', function() {
+  btnCityTotalView.classList.add('active');
+  btnPercentageView.classList.remove('active');
+  
+  const barangaySelect = document.getElementById('barangayFilter');
+  barangaySelect.disabled = true;
+  barangaySelect.value = 'city_total';
+  activeBarangay = 'city_total';
+  window.previousBarangay = 'all';
+  
+  drawLayer(activeYearFrom, activeYearTo, isYearRange, activeBarangay);
+  applyLegendFilter();
+  flipToChart();
   renderFullChart();
 });
 
@@ -347,7 +504,6 @@ legendItems.forEach(item => {
     activeField = item.dataset.field;
     activeLabel = item.dataset.label;
     activeColor = item.dataset.color;
-
     applyLegendFilter();
     updateGradientScale(activeColor);
     renderFullChart();
@@ -372,16 +528,10 @@ function applyLegendFilter() {
   });
 }
 
-// ===================== YEAR & BARANGAY SELECT =====================
-document.getElementById('yearFilter').addEventListener('change', e=>{
-  activeYear = e.target.value;
-  drawLayer(activeYear, activeBarangay);
-  renderFullChart(); 
-});
-
+// ===================== BARANGAY SELECT =====================
 document.getElementById('barangayFilter').addEventListener('change', e=>{
   activeBarangay = e.target.value.toLowerCase();
-  drawLayer(activeYear, activeBarangay);
+  drawLayer(activeYearFrom, activeYearTo, isYearRange, activeBarangay);
   renderFullChart();
 });
 
@@ -390,10 +540,14 @@ function flipToChart() {
   mapContainer.classList.add('flipped');
   chartContainer.classList.remove('hidden');
   chartContainer.classList.add('flipped');
-  
   const gradientWrapper = document.getElementById('gradient-wrapper');
-  if (gradientWrapper) {
-    gradientWrapper.style.display = 'none';
+  if (gradientWrapper) gradientWrapper.style.display = 'none';
+  
+  // Check if City View is active and disable barangay dropdown
+  if (activeBarangay === 'city_total') {
+    const barangaySelect = document.getElementById('barangayFilter');
+    barangaySelect.disabled = true;
+    barangaySelect.value = 'city_total';
   }
   
   renderFullChart();
@@ -403,11 +557,27 @@ function flipToMap() {
   mapContainer.classList.remove('flipped');
   chartContainer.classList.add('hidden');
   chartContainer.classList.remove('flipped');
-  
   const gradientWrapper = document.getElementById('gradient-wrapper');
-  if (gradientWrapper) {
-    gradientWrapper.style.display = 'block';
+  if (gradientWrapper) gradientWrapper.style.display = 'block';
+  
+  if (!activeField) {
+    const allItem = legendItems.find(li => li.dataset.field === 'ALL');
+    if (allItem) {
+      legendItems.forEach(li => li.classList.remove('active'));
+      allItem.classList.add('active');
+      activeField = 'ALL';
+      activeColor = '#888888';
+      activeLabel = 'All Indicators';
+      updateGradientScale(activeColor);
+    }
   }
+  
+  if (geoLayer && activeField) {
+    geoLayer.eachLayer(layer => layer.setStyle(styleFeature(layer.feature)));
+    applyLegendFilter();
+  }
+  
+  setTimeout(() => map.invalidateSize(), 100);
 }
 
 // ===================== GRADIENT =====================
@@ -451,7 +621,6 @@ function updateGradientScale(baseColor){
   grid.appendChild(noDataCell);
 }
 
-// ===================== FILTER BY GRADIENT =====================
 function filterMapByGradient(){
   if(!geoLayer) return;
   geoLayer.eachLayer(layer=>{
@@ -470,33 +639,30 @@ function filterMapByGradient(){
 // ===================== FULL CHART =====================
 function renderFullChart() {
   if (!geoData) return;
-
   const ctx = document.getElementById('fullChartCanvas').getContext('2d');
-
-  if (fullChart) {
-    fullChart.destroy();
-  }
+  if (fullChart) fullChart.destroy();
 
   const allYears = [...new Set(geoData.features.map(f => f.properties.YEAR))].sort((a, b) => a - b);
   const isMultipleYears = (activeYear === "All");
   const allBarangays = [...new Set(geoData.features.map(f => f.properties.BARANGAY))].sort();
-  
   const isCityTotal = (activeBarangay === 'city_total');
   const isAllBarangays = (activeBarangay === 'all');
   const isSpecificBarangay = (activeBarangay !== 'all' && activeBarangay !== 'city_total');
   
   let barangaysToShow = allBarangays;
-  if (isSpecificBarangay) {
-    barangaysToShow = barangaysToShow.filter(b => b.toLowerCase() === activeBarangay);
+  if (isSpecificBarangay) barangaysToShow = barangaysToShow.filter(b => b.toLowerCase() === activeBarangay);
+
+  let indicatorsToShow;
+  if (activeField === 'ALL') {
+    indicatorsToShow = legendItems.filter(li => li.dataset.field !== 'ALL' && li.dataset.field !== 'all');
+  } else if (activeField) {
+    indicatorsToShow = legendItems.filter(li => li.dataset.field.toUpperCase() === activeField);
+  } else {
+    indicatorsToShow = legendItems;
   }
 
-  let indicatorsToShow = activeField ? legendItems.filter(li => li.dataset.field === activeField) : legendItems;
-
   if (isCityTotal) {
-    const cityTotalData = indicatorsToShow.map(indicator => {
-      return getCityOverallTotal(indicator.dataset.field, activeYear);
-    });
-    
+    const cityTotalData = indicatorsToShow.map(indicator => getCityOverallTotal(indicator.dataset.field, activeYear));
     fullChart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -507,170 +673,67 @@ function renderFullChart() {
           backgroundColor: indicatorsToShow.map(ind => ind.dataset.color),
           borderColor: indicatorsToShow.map(ind => ind.dataset.color),
           borderWidth: 2,
-          borderRadius: 4,
-          barPercentage: 0.7
+          borderRadius: 4
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top' },
-          tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)}%` } }
-        },
-        scales: {
-          y: { beginAtZero: true, max: 20, title: { display: true, text: 'Prevalence (%)', font: { weight: 'bold' } }, ticks: { callback: val => val + "%", stepSize: 2 } },
-          x: { title: { display: true, text: 'Nutrition Indicators', font: { weight: 'bold' } } }
-        }
+        plugins: { legend: { display: true }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)}%` } } },
+        scales: { y: { beginAtZero: true, max: 20, ticks: { callback: val => val + "%", stepSize: 2 } } }
       }
     });
-  } else if (isMultipleYears) {
-    let labels, datasets;
-    
-    if (isAllBarangays) {
-      labels = allYears;
-      datasets = indicatorsToShow.map(indicator => {
-        const data = allYears.map(year => {
-          const yearFeatures = geoData.features.filter(f => String(f.properties.YEAR) === String(year));
-          let total = 0;
-          let count = 0;
-          yearFeatures.forEach(f => {
-            const val = f.properties[indicator.dataset.field.toUpperCase()];
-            if (val !== null && val !== undefined && !isNaN(val) && f.properties.NO_DATA !== true) {
-              total += Number(val);
-              count++;
-            }
-          });
-          return count > 0 ? total / count : 0;
+  } else if (isMultipleYears && isAllBarangays) {
+    const datasets = indicatorsToShow.map(indicator => ({
+      label: indicator.dataset.label,
+      data: allYears.map(year => {
+        const yearFeatures = geoData.features.filter(f => String(f.properties.YEAR) === String(year));
+        let total = 0, count = 0;
+        yearFeatures.forEach(f => {
+          const val = f.properties[indicator.dataset.field.toUpperCase()];
+          if (val !== null && !isNaN(val) && f.properties.NO_DATA !== true) { total += Number(val); count++; }
         });
-        
-        return {
-          label: indicator.dataset.label,
-          data: data,
-          borderColor: indicator.dataset.color,
-          backgroundColor: 'transparent',
-          borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          tension: 0.3,
-          fill: false
-        };
-      });
-    } else {
-      const selectedBarangay = barangaysToShow[0];
-      labels = allYears;
-      datasets = indicatorsToShow.map(indicator => {
-        const data = allYears.map(year => {
-          const feature = geoData.features.find(f => 
-            f.properties.BARANGAY === selectedBarangay && 
-            String(f.properties.YEAR) === String(year)
-          );
-          return feature ? Number(feature.properties[indicator.dataset.field.toUpperCase()] ?? 0) : 0;
-        });
-        
-        return {
-          label: indicator.dataset.label,
-          data: data,
-          borderColor: indicator.dataset.color,
-          backgroundColor: 'transparent',
-          borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          tension: 0.3,
-          fill: false
-        };
-      });
-    }
-    
+        return count > 0 ? total / count : 0;
+      }),
+      borderColor: indicator.dataset.color,
+      backgroundColor: 'transparent',
+      borderWidth: 3,
+      tension: 0.3,
+      fill: false
+    }));
     fullChart = new Chart(ctx, {
       type: 'line',
-      data: { labels: labels, datasets: datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top' },
-          tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)}%` } }
-        },
-        scales: {
-          y: { beginAtZero: true, max: 20, title: { display: true, text: 'Prevalence (%)', font: { weight: 'bold' } }, ticks: { callback: val => val + "%", stepSize: 2 } },
-          x: { title: { display: true, text: 'Year', font: { weight: 'bold' } } }
-        }
-      }
+      data: { labels: allYears, datasets },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true, max: 20, ticks: { callback: val => val + "%", stepSize: 2 } } } }
     });
   } else if (!isMultipleYears && isAllBarangays) {
-    const specificYear = activeYear;
-    const yearFeatures = geoData.features.filter(f => String(f.properties.YEAR) === String(specificYear));
-    
-    const datasets = indicatorsToShow.map(indicator => {
-      const data = allBarangays.map(barangay => {
+    const yearFeatures = geoData.features.filter(f => String(f.properties.YEAR) === String(activeYear));
+    const datasets = indicatorsToShow.map(indicator => ({
+      label: indicator.dataset.label,
+      data: allBarangays.map(barangay => {
         const feature = yearFeatures.find(f => f.properties.BARANGAY === barangay);
         return feature ? Number(feature.properties[indicator.dataset.field.toUpperCase()] ?? 0) : 0;
-      });
-      
-      return {
-        label: indicator.dataset.label,
-        data: data,
-        backgroundColor: indicator.dataset.color,
-        borderColor: indicator.dataset.color,
-        borderWidth: 1,
-        borderRadius: 4,
-        barPercentage: 0.7,
-        categoryPercentage: 0.8
-      };
-    });
-    
+      }),
+      backgroundColor: indicator.dataset.color,
+      borderColor: indicator.dataset.color,
+      borderRadius: 4
+    }));
     fullChart = new Chart(ctx, {
       type: 'bar',
-      data: { labels: allBarangays, datasets: datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top' },
-          tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)}%` } }
-        },
-        scales: {
-          y: { beginAtZero: true, max: 20, title: { display: true, text: 'Prevalence (%)', font: { weight: 'bold' } }, ticks: { callback: val => val + "%", stepSize: 2 } },
-          x: { title: { display: true, text: 'Barangay', font: { weight: 'bold' } }, ticks: { maxRotation: 45, minRotation: 45, autoSkip: true } }
-        }
-      }
+      data: { labels: allBarangays, datasets },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true, max: 20, ticks: { callback: val => val + "%", stepSize: 2 } } } }
     });
   } else if (!isMultipleYears && isSpecificBarangay) {
-    const selectedBarangay = barangaysToShow[0];
     const yearFeatures = geoData.features.filter(f => String(f.properties.YEAR) === String(activeYear));
-    const feature = yearFeatures.find(f => f.properties.BARANGAY === selectedBarangay);
-    
-    const barangayData = indicatorsToShow.map(indicator => {
-      return feature ? Number(feature.properties[indicator.dataset.field.toUpperCase()] ?? 0) : 0;
-    });
-    
+    const feature = yearFeatures.find(f => f.properties.BARANGAY === barangaysToShow[0]);
+    const barangayData = indicatorsToShow.map(indicator => feature ? Number(feature.properties[indicator.dataset.field.toUpperCase()] ?? 0) : 0);
     fullChart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: indicatorsToShow.map(ind => ind.dataset.label),
-        datasets: [{
-          label: `${selectedBarangay} (${activeYear})`,
-          data: barangayData,
-          backgroundColor: indicatorsToShow.map(ind => ind.dataset.color),
-          borderColor: indicatorsToShow.map(ind => ind.dataset.color),
-          borderWidth: 1,
-          borderRadius: 4,
-          barPercentage: 0.6
-        }]
+        datasets: [{ label: `${barangaysToShow[0]} (${activeYear})`, data: barangayData, backgroundColor: indicatorsToShow.map(ind => ind.dataset.color), borderRadius: 4 }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top' },
-          tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)}%` } }
-        },
-        scales: {
-          y: { beginAtZero: true, max: 20, title: { display: true, text: 'Prevalence (%)', font: { weight: 'bold' } }, ticks: { callback: val => val + "%", stepSize: 2 } },
-          x: { title: { display: true, text: 'Nutrition Indicators', font: { weight: 'bold' } } }
-        }
-      }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true, max: 20, ticks: { callback: val => val + "%", stepSize: 2 } } } }
     });
   }
 }
@@ -681,42 +744,41 @@ const btnChartView = document.getElementById('btnChartView');
 
 btnMapView.addEventListener('click', () => {
   const barangaySelect = document.getElementById('barangayFilter');
-  barangaySelect.disabled = false;
+  
+  if (activeBarangay === 'city_total') {
+    barangaySelect.disabled = false;
+    const previousBarangay = window.previousBarangay || 'all';
+    barangaySelect.value = previousBarangay === 'all' ? 'All' : previousBarangay.charAt(0).toUpperCase() + previousBarangay.slice(1);
+    activeBarangay = previousBarangay === 'all' ? 'all' : previousBarangay;
+    drawLayer(activeYearFrom, activeYearTo, isYearRange, activeBarangay);
+    
+    // Reset button states
+    btnPercentageView.classList.add('active');
+    btnCityTotalView.classList.remove('active');
+  } else {
+    barangaySelect.disabled = false;
+  }
+  
   flipToMap();
+  
+  if (geoLayer && activeField) {
+    geoLayer.eachLayer(layer => layer.setStyle(styleFeature(layer.feature)));
+    applyLegendFilter();
+  }
 });
 
 btnChartView.addEventListener('click', () => {
+  // Check if City View button should be active
+  if (activeBarangay === 'city_total') {
+    btnCityTotalView.classList.add('active');
+    btnPercentageView.classList.remove('active');
+    const barangaySelect = document.getElementById('barangayFilter');
+    barangaySelect.disabled = true;
+  }
+  
   flipToChart();
   renderFullChart();
 });
-
-// ===================== CITY TOTAL VIEW BUTTON =====================
-const btnCityTotalView = document.getElementById('btnCityTotalView');
-
-if (btnCityTotalView) {
-  btnCityTotalView.addEventListener('click', function() {
-    btnCityTotalView.classList.add('active');
-    btnPercentageView.classList.remove('active');
-    
-    const barangaySelect = document.getElementById('barangayFilter');
-    barangaySelect.disabled = true;
-    barangaySelect.value = 'city_total';
-    activeBarangay = 'city_total';
-    
-    activeField = null;
-    activeColor = null;
-    activeLabel = null;
-    
-    const gradientGrid = document.getElementById('gradient-grid');
-    if (gradientGrid) gradientGrid.innerHTML = '';
-    
-    drawLayer(activeYear, activeBarangay);
-    applyLegendFilter();
-    flipToChart();
-    renderFullChart();
-  });
-}
-
 // Force barangay dropdown to open downward
 const barangayFilter = document.getElementById('barangayFilter');
 if (barangayFilter) {
@@ -724,15 +786,10 @@ if (barangayFilter) {
     const rect = this.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
-    
     if (spaceBelow < 200 && spaceAbove > spaceBelow) {
       this.style.marginTop = '100px';
       this.style.marginBottom = '-100px';
-      
-      this.addEventListener('blur', function() {
-        this.style.marginTop = '';
-        this.style.marginBottom = '';
-      }, { once: true });
+      this.addEventListener('blur', function() { this.style.marginTop = ''; this.style.marginBottom = ''; }, { once: true });
     }
   });
 }
