@@ -50,7 +50,7 @@ if (!empty($user['profile_pic']) && file_exists("../uploads/" . $user['profile_p
 
 /* Active page highlight */
 .menu-links li.active,
-#settingsMenu li.active { background-color: #00AEEF; color: #fff; }
+#settingsMenu li.active { background-color: #009688; color: #fff; }
 .menu-links li.active i,
 #settingsMenu li.active i { color: #fff; }
 
