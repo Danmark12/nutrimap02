@@ -242,7 +242,7 @@ table th:nth-child(2) {
   </tr>
   </tr>
   <?php 
-  $nutri = ['1. Severely underweight','2. Underweight','3. Normal weight','4. Severely wasted','5. Wasted','6. Overweight','7. Obese','8. Severely stunted','9. Stunted'];
+  $nutri = ['Severely underweight','Underweight','Normal weight','everely wasted','Wasted','Overweight','Obese','Severely stunted','Stunted'];
   for ($i=1;$i<=9;$i++): ?>
   <tr class="indent">
     <td><?= $i.'. '.$nutri[$i-1] ?></td>

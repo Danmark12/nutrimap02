@@ -17,36 +17,93 @@ $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 $displayName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
 $barangay    = htmlspecialchars($user['barangay']);
 
-// Stat counts
-$totalStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.is_submitted = 1");
-$totalStmt->execute([$userId]); $totalReports = $totalStmt->fetchColumn();
-
-$approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
-$approvedStmt->execute([$userId]); $approvedReports = $approvedStmt->fetchColumn();
-
-$pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
-$pendingStmt->execute([$userId]); $pendingReports = $pendingStmt->fetchColumn();
-
-$rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
-$rejectedStmt->execute([$userId]); $rejectedReports = $rejectedStmt->fetchColumn();
-
-// Latest report for timeline
-$latestStmt = $pdo->prepare("SELECT r.id, r.status, r.report_date, r.report_time, r.is_submitted, b.title FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? ORDER BY r.report_date DESC, r.report_time DESC LIMIT 1");
-$latestStmt->execute([$userId]);
-$latestReport = $latestStmt->fetch(PDO::FETCH_ASSOC);
-
-// Get all approved reports for this BNS user (by report ID, not just year)
-$reportsStmt = $pdo->prepare("
-    SELECT r.id, r.report_date, r.status, b.year, b.title
+// Get all distinct years from approved reports for global filter
+$allYearsStmt = $pdo->prepare("
+    SELECT DISTINCT b.year
     FROM reports r
     JOIN bns_reports b ON r.id = b.report_id
-    WHERE r.user_id = ? AND r.status = 'Approved'
-    ORDER BY r.report_date DESC
+    WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1
+    ORDER BY b.year DESC
 ");
-$reportsStmt->execute([$userId]);
+$allYearsStmt->execute([$userId]);
+$allAvailableYears = $allYearsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Get selected global year from URL, default to latest year
+$selectedGlobalYear = isset($_GET['global_year']) && $_GET['global_year'] !== '' ? (int)$_GET['global_year'] : ($allAvailableYears[0] ?? null);
+
+// Total reports (filtered by year)
+if ($selectedGlobalYear) {
+    $totalStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.is_submitted = 1 AND b.year = ?");
+    $totalStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $totalStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.is_submitted = 1");
+    $totalStmt->execute([$userId]);
+}
+$totalReports = $totalStmt->fetchColumn();
+
+// Approved reports (filtered by year)
+if ($selectedGlobalYear) {
+    $approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1) AND b.year = ?");
+    $approvedStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
+    $approvedStmt->execute([$userId]);
+}
+$approvedReports = $approvedStmt->fetchColumn();
+
+// Pending reports (filtered by year)
+if ($selectedGlobalYear) {
+    $pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1) AND b.year = ?");
+    $pendingStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
+    $pendingStmt->execute([$userId]);
+}
+$pendingReports = $pendingStmt->fetchColumn();
+
+// Rejected reports (filtered by year)
+if ($selectedGlobalYear) {
+    $rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1) AND b.year = ?");
+    $rejectedStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
+    $rejectedStmt->execute([$userId]);
+}
+$rejectedReports = $rejectedStmt->fetchColumn();
+
+// Latest report for timeline (filtered by year)
+if ($selectedGlobalYear) {
+    $latestStmt = $pdo->prepare("SELECT r.id, r.status, r.report_date, r.report_time, r.is_submitted, b.title FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND b.year = ? ORDER BY r.report_date DESC, r.report_time DESC LIMIT 1");
+    $latestStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $latestStmt = $pdo->prepare("SELECT r.id, r.status, r.report_date, r.report_time, r.is_submitted, b.title FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? ORDER BY r.report_date DESC, r.report_time DESC LIMIT 1");
+    $latestStmt->execute([$userId]);
+}
+$latestReport = $latestStmt->fetch(PDO::FETCH_ASSOC);
+
+// Get all approved reports for this BNS user, filtered by global year
+if ($selectedGlobalYear) {
+    $reportsStmt = $pdo->prepare("
+        SELECT r.id, r.report_date, r.status, b.year, b.title
+        FROM reports r
+        JOIN bns_reports b ON r.id = b.report_id
+        WHERE r.user_id = ? AND r.status = 'Approved' AND b.year = ?
+        ORDER BY r.report_date DESC
+    ");
+    $reportsStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $reportsStmt = $pdo->prepare("
+        SELECT r.id, r.report_date, r.status, b.year, b.title
+        FROM reports r
+        JOIN bns_reports b ON r.id = b.report_id
+        WHERE r.user_id = ? AND r.status = 'Approved'
+        ORDER BY r.report_date DESC
+    ");
+    $reportsStmt->execute([$userId]);
+}
 $availableReports = $reportsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get selected report ID from URL, default to latest report
+// Get selected report ID from URL, default to latest from filtered list
 $selectedReportId = isset($_GET['report_id']) ? (int)$_GET['report_id'] : ($availableReports[0]['id'] ?? null);
 
 // Find the selected report data for display
@@ -69,26 +126,76 @@ $nutriStmt = $pdo->prepare("
 $nutriStmt->execute([$userId, $selectedReportId]);
 $n = $nutriStmt->fetch(PDO::FETCH_ASSOC);
 
-
-// Recent activity - only approved reports
-$activityStmt = $pdo->prepare("SELECT r.id, r.status, r.report_date, r.report_time, b.title, r.is_submitted FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' ORDER BY r.report_date DESC, r.report_time DESC LIMIT 5");
-$activityStmt->execute([$userId]);
+// Recent activity - only approved reports filtered by year
+if ($selectedGlobalYear) {
+    $activityStmt = $pdo->prepare("
+        SELECT r.id, r.status, r.report_date, r.report_time, b.title, r.is_submitted 
+        FROM reports r 
+        JOIN bns_reports b ON r.id = b.report_id 
+        WHERE r.user_id = ? AND r.status = 'Approved' AND b.year = ?
+        ORDER BY r.report_date DESC, r.report_time DESC LIMIT 5
+    ");
+    $activityStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $activityStmt = $pdo->prepare("
+        SELECT r.id, r.status, r.report_date, r.report_time, b.title, r.is_submitted 
+        FROM reports r 
+        JOIN bns_reports b ON r.id = b.report_id 
+        WHERE r.user_id = ? AND r.status = 'Approved'
+        ORDER BY r.report_date DESC, r.report_time DESC LIMIT 5
+    ");
+    $activityStmt->execute([$userId]);
+}
 $recentActivity = $activityStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Paginated pending/rejected table
+// Paginated pending/rejected table (filtered by year)
 $limit  = 8;
 $page   = isset($_GET['page']) ? max(1,(int)$_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
 
-$totalRowsStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1");
-$totalRowsStmt->execute([$userId]); $totalRows = $totalRowsStmt->fetchColumn();
+if ($selectedGlobalYear) {
+    $totalRowsStmt = $pdo->prepare("
+        SELECT COUNT(*) FROM reports r 
+        JOIN bns_reports b ON r.id = b.report_id 
+        WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1 AND b.year = ?
+    ");
+    $totalRowsStmt->execute([$userId, $selectedGlobalYear]);
+} else {
+    $totalRowsStmt = $pdo->prepare("
+        SELECT COUNT(*) FROM reports r 
+        JOIN bns_reports b ON r.id = b.report_id 
+        WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1
+    ");
+    $totalRowsStmt->execute([$userId]);
+}
+$totalRows = $totalRowsStmt->fetchColumn();
 $totalPages = ceil($totalRows / $limit);
 
-$stmt = $pdo->prepare("SELECT r.id, u.profile_pic, u.username, b.title, r.status, r.report_time, r.report_date FROM reports r JOIN users u ON r.user_id = u.id JOIN bns_reports b ON r.id = b.report_id LEFT JOIN report_archives a ON r.id = a.report_id AND (a.is_deleted=0 OR a.is_deleted IS NULL) AND (a.is_archived=0 OR a.is_archived IS NULL) WHERE r.user_id=:userId AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1 ORDER BY r.report_date DESC, r.report_time DESC LIMIT :limit OFFSET :offset");
-$stmt->bindValue(':userId',$userId,PDO::PARAM_INT);
-$stmt->bindValue(':limit',$limit,PDO::PARAM_INT);
-$stmt->bindValue(':offset',$offset,PDO::PARAM_INT);
-$stmt->execute();
+if ($selectedGlobalYear) {
+    $stmt = $pdo->prepare("
+        SELECT r.id, u.profile_pic, u.username, b.title, r.status, r.report_time, r.report_date 
+        FROM reports r 
+        JOIN users u ON r.user_id = u.id 
+        JOIN bns_reports b ON r.id = b.report_id 
+        LEFT JOIN report_archives a ON r.id = a.report_id AND (a.is_deleted=0 OR a.is_deleted IS NULL) AND (a.is_archived=0 OR a.is_archived IS NULL) 
+        WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1 AND b.year = ?
+        ORDER BY r.report_date DESC, r.report_time DESC 
+        LIMIT ? OFFSET ?
+    ");
+    $stmt->execute([$userId, $selectedGlobalYear, $limit, $offset]);
+} else {
+    $stmt = $pdo->prepare("
+        SELECT r.id, u.profile_pic, u.username, b.title, r.status, r.report_time, r.report_date 
+        FROM reports r 
+        JOIN users u ON r.user_id = u.id 
+        JOIN bns_reports b ON r.id = b.report_id 
+        LEFT JOIN report_archives a ON r.id = a.report_id AND (a.is_deleted=0 OR a.is_deleted IS NULL) AND (a.is_archived=0 OR a.is_archived IS NULL) 
+        WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1
+        ORDER BY r.report_date DESC, r.report_time DESC 
+        LIMIT ? OFFSET ?
+    ");
+    $stmt->execute([$userId, $limit, $offset]);
+}
 $myReports = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $hour = (int)date('H');
@@ -330,6 +437,11 @@ body{background:var(--surface);color:var(--text);}
 /* Report Selector */
 .report-selector{padding:5px 12px;border-radius:10px;border:1px solid var(--border);font-size:13px;font-weight:500;background:white;color:var(--teal-700);cursor:pointer;outline:none;min-width:200px;}
 .report-selector:focus{border-color:var(--teal-400);box-shadow:0 0 0 2px rgba(0,181,174,.2);}
+
+/* Global Year Selector */
+.global-year-selector{padding:6px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.3);font-size:13px;font-weight:500;background:rgba(255,255,255,0.15);color:white;cursor:pointer;outline:none;min-width:130px;}
+.global-year-selector option{background:var(--teal-700);color:white;}
+.global-year-selector:focus{border-color:rgba(255,255,255,0.5);}
 </style>
 </head>
 <body>
@@ -338,14 +450,24 @@ body{background:var(--surface);color:var(--text);}
 <div class="flex flex-1 overflow-hidden">
 <main class="flex-1 overflow-y-auto p-5" style="display:flex;flex-direction:column;gap:1.125rem;">
 
-  <!-- Greeting -->
-  <div class="greet fu fu1" style="padding: 2.5rem 1.75rem;">
+  <!-- Greeting with Global Year Selector -->
+  <div class="greet fu fu1" style="padding: 3rem 1.75rem;">
     <div style="z-index:1;">
       <p style="font-size:11px;opacity:.65;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;"><?= $greeting ?></p>
       <h1 style="font-size:21px;font-weight:700;margin-bottom:2px;"><?= $displayName ?></h1>
       <p style="font-size:13px;opacity:.7;"><i class="fa fa-map-marker-alt" style="margin-right:5px;"></i>Barangay <?= $barangay ?></p>
     </div>
     <div style="text-align:right;z-index:1;">
+      <!-- GLOBAL YEAR SELECTOR -->
+      <?php if(count($allAvailableYears) > 0): ?>
+      <div style="margin-bottom:12px;">
+        <select id="globalYearSelect" class="global-year-selector" onchange="updateGlobalYear(this.value)">
+          <?php foreach($allAvailableYears as $year): ?>
+          <option value="<?= $year ?>" <?= $selectedGlobalYear == $year ? 'selected' : '' ?>><?= $year ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <?php endif; ?>
       <p style="font-size:10px;opacity:.55;text-transform:uppercase;">Today</p>
       <p style="font-size:15px;font-weight:600;"><?= date('F j, Y') ?></p>
       <p style="font-size:12px;opacity:.6;" id="livetime"></p>
@@ -370,7 +492,7 @@ body{background:var(--surface);color:var(--text);}
     <?php endif; ?>
   <?php endif; ?>
 
-  <!-- Stat cards -->
+  <!-- Stat cards (filtered by global year) -->
   <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
     <div class="stat fu fu1"><div class="stat-icon" style="background:#e6f5f4;color:var(--teal-700);"><i class="fa fa-file-alt"></i></div><div><p class="stat-lbl">Total</p><p class="stat-val" style="color:var(--teal-700);"><?= $totalReports ?></p></div></div>
     <div class="stat fu fu2"><div class="stat-icon" style="background:#f0fdf4;color:#166534;"><i class="fa fa-check-circle"></i></div><div><p class="stat-lbl">Approved</p><p class="stat-val" style="color:#166534;"><?= $approvedReports ?></p></div></div>
@@ -400,14 +522,14 @@ body{background:var(--surface);color:var(--text);}
           </div>
           <?php endforeach; ?>
       </div>
-      <?php if(!$latestReport): ?><p style="text-align:center;font-size:13px;color:var(--muted);padding:1rem;">No reports submitted yet.</p><?php endif; ?>
+      <?php if(!$latestReport): ?><p style="text-align:center;font-size:13px;color:var(--muted);padding:1rem;">No reports submitted yet for <?= $selectedGlobalYear ?>.</p><?php endif; ?>
     </div>
 
     <div class="card fu fu3">
-      <div class="card-header"><span class="card-title"><i class="fa fa-history"></i>Recent Activity</span><a href="reports.php" style="font-size:11px;color:var(--teal-500);text-decoration:none;">View all →</a></div>
+      <div class="card-header"><span class="card-title"><i class="fa fa-history"></i>Recent Activity</span><a href="report_history.php" style="font-size:11px;color:var(--teal-500);text-decoration:none;">View all →</a></div>
       <div style="padding:.5rem 1.375rem;"><?php if($recentActivity): foreach($recentActivity as $act): $dc=$act['status']==='Approved'?'#22c55e':($act['status']==='Rejected'?'#ef4444':'#f59e0b'); ?>
         <div class="act-item"><div class="act-dot" style="background:<?=$dc?>;"></div><div style="flex:1;"><p style="font-size:13px;font-weight:500;"><?= htmlspecialchars($act['title']) ?></p><p style="font-size:11px;color:var(--muted);margin-top:2px;"><span class="badge b-<?= strtolower($act['status']) ?>"><?= $act['status'] ?></span> <?= htmlspecialchars($act['report_date']) ?></p></div><a href="view_report.php?id=<?= $act['id'] ?>" style="font-size:11px;color:var(--teal-500);">View →</a></div>
-      <?php endforeach; else: ?><p style="text-align:center;font-size:13px;color:var(--muted);padding:1.5rem 0;">No activity yet.</p><?php endif; ?></div>
+      <?php endforeach; else: ?><p style="text-align:center;font-size:13px;color:var(--muted);padding:1.5rem 0;">No activity yet for <?= $selectedGlobalYear ?>.</p><?php endif; ?></div>
     </div>
   </div>
 
@@ -418,13 +540,15 @@ body{background:var(--surface);color:var(--text);}
       <span class="card-title"><i class="fa fa-leaf"></i>Barangay <?= $barangay ?> — Nutrition Snapshot</span>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <?php if(count($availableReports) > 0): ?>
-        <select id="reportSelect" class="report-selector" onchange="window.location.href='?report_id='+this.value">
+        <select id="reportSelect" class="report-selector" onchange="updateReport(this.value)">
             <?php foreach($availableReports as $report): ?>
             <option value="<?= $report['id'] ?>" <?= $selectedReportId == $report['id'] ? 'selected' : '' ?>>
                 <?= $report['year'] ?> - <?= date('M d, Y', strtotime($report['report_date'])) ?> (<?= htmlspecialchars($report['title']) ?>)
             </option>
             <?php endforeach; ?>
         </select>
+        <?php else: ?>
+        <span style="font-size:12px;color:var(--muted);">No approved reports for <?= $selectedGlobalYear ?></span>
         <?php endif; ?>
         <span style="font-size:11px;color:var(--muted);">
             Showing: <?= $reportYear ?> · <?= $reportDate ?>
@@ -517,9 +641,11 @@ body{background:var(--surface);color:var(--text);}
     <div class="ntab-panel" id="tab-watsan">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div><p style="font-weight:600;margin-bottom:8px;"><i class="fa fa-toilet"></i> Toilet Facilities</p>
-          <table style="width:100%;font-size:12px;"><?php $toilets=[['Water-sealed',$toilet_water_sealed],['Antipolo',$toilet_antipolo],['Open Pit',$toilet_open_pit],['Shared',$toilet_shared],['No Toilet',$toilet_none]]; foreach($toilets as $t):?><tr><td style="padding:4px 0;"><?=$t[0]?></td><td style="text-align:right;"><?=number_format($t[1])?></td><td style="text-align:right;color:var(--muted);">(<?=$total_households>0?round($t[1]/$total_households*100,1):0?>%)</td><?php endforeach;?><tr style="border-top:1px solid var(--border);"><td style="padding-top:6px;font-weight:600;">Sanitation Coverage</td><td style="text-align:right;font-weight:600;" colspan="2"><?=$sanitation_coverage?>%</td></tr></table></div>
+          <table style="width:100%;font-size:12px;"><?php $toilets=[['Water-sealed',$toilet_water_sealed],['Antipolo',$toilet_antipolo],['Open Pit',$toilet_open_pit],['Shared',$toilet_shared],['No Toilet',$toilet_none]]; foreach($toilets as $t):?><tr><td style="padding:4px 0;"><?=$t[0]?></td><td style="text-align:right;"><?=number_format($t[1])?></td><td style="text-align:right;color:var(--muted);">(<?=$total_households>0?round($t[1]/$total_households*100,1):0?>%)</td><?php endforeach;?><tr style="border-top:1px solid var(--border);"><td style="padding-top:6px;font-weight:600;">Sanitation Coverage</td><td style="text-align:right;font-weight:600;" colspan="2"><?=$sanitation_coverage?>%</td></tr></table>
+        </div>
         <div><p style="font-weight:600;margin-bottom:8px;"><i class="fa fa-water"></i> Water Sources</p>
-          <table style="width:100%;font-size:12px;"><?php $waters=[['Piped Water',$water_piped],['Spring',$water_spring],['Deep Well (Communal)',$water_deep_well_communal],['Deep Well (Individual)',$water_deep_well_individual],['Purified Station',$water_purified],['Shallow Dug Well',$water_shallow_well],['Artesian Well',$water_artesian]]; foreach($waters as $w):?><tr><td style="padding:4px 0;"><?=$w[0]?></td><td style="text-align:right;"><?=number_format($w[1])?></td></tr><?php endforeach;?><tr style="border-top:1px solid var(--border);"><td style="padding-top:6px;font-weight:600;">Safe Water Coverage</td><td style="text-align:right;font-weight:600;"><?=$safe_water_coverage?>%</td></tr></table></div>
+          <table style="width:100%;font-size:12px;"><?php $waters=[['Piped Water',$water_piped],['Spring',$water_spring],['Deep Well (Communal)',$water_deep_well_communal],['Deep Well (Individual)',$water_deep_well_individual],['Purified Station',$water_purified],['Shallow Dug Well',$water_shallow_well],['Artesian Well',$water_artesian]]; foreach($waters as $w):?><tr><td style="padding:4px 0;"><?=$w[0]?></td><td style="text-align:right;"><?=number_format($w[1])?></td><?php endforeach;?><tr style="border-top:1px solid var(--border);"><td style="padding-top:6px;font-weight:600;">Safe Water Coverage</td><td style="text-align:right;font-weight:600;"><?=$safe_water_coverage?>%</td></tr></table>
+        </div>
       </div>
       <div style="margin-top:1rem;"><p style="font-weight:600;margin-bottom:8px;"><i class="fa fa-trash"></i> Garbage Disposal</p><div class="info-grid"><?php $garbages=[['Collection',$garbage_collection],['Compost Pit',$garbage_compost],['Burning',$garbage_burning],['Dumping',$garbage_dumping]]; foreach($garbages as $g):?><div class="info-card"><div class="info-value"><?=number_format($g[1])?></div><div class="stat-lbl"><?=$g[0]?></div><div class="stat-lbl"><?=$total_households>0?round($g[1]/$total_households*100,1):0?>%</div></div><?php endforeach;?></div></div>
     </div>
@@ -554,7 +680,7 @@ body{background:var(--surface);color:var(--text);}
   <?php else: ?>
   <div class="card fu fu4" style="padding:2.5rem;text-align:center;">
     <i class="fa fa-chart-bar" style="font-size:36px;color:var(--border);"></i>
-    <p style="font-size:14px;color:var(--muted);margin-top:10px;">No approved report data yet.</p>
+    <p style="font-size:14px;color:var(--muted);margin-top:10px;">No approved report data yet for <?= $selectedGlobalYear ?>.</p>
     <p style="font-size:12px;color:var(--muted);">Submit and get a report approved to see your barangay snapshot.</p>
     <?php if(count($availableReports) > 0 && !$n): ?>
     <p style="font-size:12px;color:var(--teal-500);margin-top:8px;">Try selecting a different report from the dropdown above.</p>
@@ -565,8 +691,8 @@ body{background:var(--surface);color:var(--text);}
   <!-- Reports table -->
   <div class="card fu fu5">
     <div class="card-header"><span class="card-title"><i class="fa fa-table"></i>Pending &amp; Rejected Reports</span><div><div class="search-wrap"><i class="fa fa-search"></i><input id="tableSearch" type="text" placeholder="Search…" class="search-inp"></div></div></div>
-    <div style="overflow-x:auto;"><table id="reportsTable" class="dt w-full"><thead><th>User</th><th>Report Title</th><th>Status</th><th>Date</th><th>Time</th><th>Action</th></thead><tbody><?php if($myReports): foreach($myReports as $r): $pic=(!empty($r['profile_pic'])&&file_exists("../uploads/".$r['profile_pic']))?"../uploads/".htmlspecialchars($r['profile_pic']):"../uploads/default.png";?><tr><td><div style="display:flex;align-items:center;gap:8px;"><img src="<?=$pic?>" style="width:28px;height:28px;border-radius:50%;object-fit:cover;"><span><?=htmlspecialchars($r['username'])?></span></div></td><td><?=htmlspecialchars($r['title'])?></td><td><span class="badge b-<?=strtolower($r['status'])?>"><?=$r['status']?></span></td><td><?=htmlspecialchars($r['report_date'])?></td><td><?=htmlspecialchars(substr($r['report_time'],0,5))?></td><td><a href="view_report.php?id=<?=$r['id']?>" class="btn-view"><i class="fa fa-eye"></i> View</a></td></tr><?php endforeach; else: ?><td><td colspan="6" style="text-align:center;padding:2rem;"><i class="fa fa-check-circle" style="font-size:28px;color:#86efac;"></i><p>No pending or rejected reports.</p><a href="add_report.php" style="color:var(--teal-500);">+ Submit a new report →</a></td></tr><?php endif; ?></tbody></table></div>
-    <?php if($totalPages>1): ?><div style="display:flex;justify-content:center;gap:5px;padding:12px;"><?php for($i=1;$i<=$totalPages;$i++):?><a href="?page=<?=$i?>&report_id=<?=$selectedReportId?>" class="pg-btn <?=$i==$page?'active':''?>"><?=$i?></a><?php endfor;?></div><?php endif; ?>
+    <div style="overflow-x:auto;"><table id="reportsTable" class="dt w-full"><thead><th>User</th><th>Report Title</th><th>Status</th><th>Date</th><th>Time</th><th>Action</th></thead><tbody><?php if($myReports): foreach($myReports as $r): $pic=(!empty($r['profile_pic'])&&file_exists("../uploads/".$r['profile_pic']))?"../uploads/".htmlspecialchars($r['profile_pic']):"../uploads/default.png";?><tr><td><div style="display:flex;align-items:center;gap:8px;"><img src="<?=$pic?>" style="width:28px;height:28px;border-radius:50%;object-fit:cover;"><span><?=htmlspecialchars($r['username'])?></span></div></td><td><?=htmlspecialchars($r['title'])?></td><td><span class="badge b-<?=strtolower($r['status'])?>"><?=$r['status']?></span></td><td><?=htmlspecialchars($r['report_date'])?></td><td><?=htmlspecialchars(substr($r['report_time'],0,5))?></td><td><a href="view_report.php?id=<?=$r['id']?>" class="btn-view"><i class="fa fa-eye"></i> View</a></td></tr><?php endforeach; else: ?><tr><td colspan="6" style="text-align:center;padding:2rem;"><i class="fa fa-check-circle" style="font-size:28px;color:#86efac;"></i><p>No pending or rejected reports for <?= $selectedGlobalYear ?>.</p><a href="add_report.php" style="color:var(--teal-500);">+ Submit a new report →</a></td></tr><?php endif; ?></tbody></table></div>
+    <?php if($totalPages>1): ?><div style="display:flex;justify-content:center;gap:5px;padding:12px;"><?php for($i=1;$i<=$totalPages;$i++):?><a href="?page=<?=$i?><?= $selectedGlobalYear ? '&global_year='.$selectedGlobalYear : '' ?>&report_id=<?=$selectedReportId?>" class="pg-btn <?=$i==$page?'active':''?>"><?=$i?></a><?php endfor;?></div><?php endif; ?>
   </div>
 
 </main>
@@ -576,6 +702,19 @@ body{background:var(--surface);color:var(--text);}
 <script>
 function updateClock(){ document.getElementById('livetime').textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
 updateClock(); setInterval(updateClock,1000);
+
+// Global year update function
+function updateGlobalYear(year) {
+    var currentReportId = '<?= $selectedReportId ?>';
+    window.location.href = '?global_year=' + year + '&report_id=' + currentReportId;
+}
+
+// Report selection update function
+function updateReport(reportId) {
+    var currentYear = '<?= $selectedGlobalYear ?>';
+    window.location.href = '?global_year=' + currentYear + '&report_id=' + reportId;
+}
+
 document.querySelectorAll('.ntab-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ document.querySelectorAll('.ntab-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.ntab-panel').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('tab-'+btn.dataset.tab).classList.add('active'); }); });
 document.getElementById('tableSearch').addEventListener('keyup',function(){ const kw=this.value.toLowerCase(); document.querySelectorAll('#reportsTable tbody tr').forEach(r=>r.style.display=r.textContent.toLowerCase().includes(kw)?'':''); });
 
