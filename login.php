@@ -131,58 +131,177 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="icon" type="image/png" href="img/CNO_Logo.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Config for Green Theme -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'nutrigreen': {
+              500: '#3e9a3e',
+              600: '#2e7d32',
+              700: '#1b5e20',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <style>
+    /* Force all teal to green */
+    .text-teal-500, .text-teal-600, .text-teal-400 {
+      color: #3e9a3e !important;
+    }
+    .bg-teal-500, .bg-teal-600 {
+      background-color: #3e9a3e !important;
+    }
+    .hover\:bg-teal-600:hover {
+      background-color: #2e7d32 !important;
+    }
+    .focus\:ring-teal-400:focus {
+      --tw-ring-color: #3e9a3e !important;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    }
+    
+    /* Compact card styling */
+    .login-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+    .login-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Input styling - compact */
+    .input-field {
+      transition: all 0.2s ease;
+      border: 1.5px solid #e2e8f0;
+    }
+    .input-field:focus {
+      border-color: #3e9a3e;
+      box-shadow: 0 0 0 2px rgba(62, 154, 62, 0.1);
+      outline: none;
+    }
+    
+    /* Button styling - compact */
+    .btn-login {
+      background: linear-gradient(135deg, #3e9a3e 0%, #2e7d32 100%);
+      transition: all 0.3s ease;
+    }
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px -4px rgba(62, 154, 62, 0.35);
+    }
+    
+    /* Illustration panel */
+    .illustration-panel {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Floating animation for illustration */
+    .floating-img {
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-  <!-- Brand header -->
-  <div class="bg-white shadow py-4 px-6 md:px-10 text-2xl font-bold text-gray-800">
-    <span class="text-teal-500">CNO</span> NutriMap
+  <!-- Brand header - Compact -->
+  <div class="bg-white shadow-sm py-2.5 px-6 md:px-8">
+    <div class="flex items-center gap-2">
+      <img src="img/CNO_Logo.png" alt="CNO Logo" class="h-8">
+      <span class="text-xl font-bold text-gray-800">
+        <span class="text-nutrigreen-500">CNO</span> NutriMap
+      </span>
+    </div>
   </div>
 
   <!-- Main container -->
   <div class="flex flex-1 flex-col md:flex-row">
 
-    <!-- Left panel: Login Form -->
-    <div class="md:w-1/2 flex justify-center items-center p-6">
-      <div class="w-full max-w-md bg-white shadow-md rounded-lg p-8">
-        <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Login</h2>
+    <!-- Left panel: Login Form - Compact -->
+    <div class="md:w-1/2 flex justify-center items-center p-4 md:p-6">
+      <div class="w-full max-w-sm login-card bg-white/95 backdrop-blur-sm rounded-xl shadow-md p-5">
+        
+        <!-- Logo icon - Smaller -->
+        <div class="flex justify-center mb-3">
+          <div class="w-12 h-12 bg-nutrigreen-100 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-leaf text-nutrigreen-500 text-xl"></i>
+          </div>
+        </div>
+        
+        <h2 class="text-xl font-bold mb-1 text-center text-gray-800">Welcome Back</h2>
+        <p class="text-gray-500 text-center text-xs mb-4"></p>
 
         <?php if (!empty($error)): ?>
-          <p class="text-red-500 text-center mb-4"><?= htmlspecialchars($error) ?></p>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
+            <p class="text-red-600 text-xs text-center"><?= htmlspecialchars($error) ?></p>
+          </div>
         <?php endif; ?>
 
-        <form method="POST" class="space-y-4">
-          <input type="text" name="email" placeholder="Email or Username" 
-                 value="<?= htmlspecialchars($rememberedEmail) ?>"
-                 class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400" required>
-
-          <div class="relative">
-            <input type="password" id="password" name="password" placeholder="Password"
-                   class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400 pr-10" required>
-            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600" onclick="togglePassword()">
-              <i id="eyeIcon" class="fa-solid fa-eye"></i>
-            </span>
+        <form method="POST" class="space-y-3">
+          <div>
+            <input type="text" name="email" placeholder="Enter your email or username" 
+                   value="<?= htmlspecialchars($rememberedEmail) ?>"
+                   class="input-field w-full px-3 py-2 rounded-lg bg-gray-50 focus:bg-white transition text-sm" required>
           </div>
 
-          <button type="submit" class="w-full bg-teal-500 text-white py-3 rounded-md font-bold hover:bg-teal-600 transition-colors">
+          <div>
+            <div class="relative">
+              <input type="password" id="password" name="password" placeholder="Enter your password"
+                     class="input-field w-full px-3 py-2 rounded-lg bg-gray-50 focus:bg-white transition pr-10 text-sm" required>
+              <span class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-400 hover:text-nutrigreen-500 transition"
+                    onclick="togglePassword()">
+                <i id="eyeIcon" class="fa-solid fa-eye text-sm"></i>
+              </span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-login w-full text-white font-medium py-2 rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
             Log In
           </button>
 
-          <div class="flex justify-between items-center text-sm text-gray-600">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" name="remember" <?= isset($_COOKIE['remember_email']) ? 'checked' : '' ?> class="h-4 w-4 rounded border-gray-300">
-              Remember me
+          <div class="flex justify-between items-center text-xs">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" name="remember" <?= isset($_COOKIE['remember_email']) ? 'checked' : '' ?> 
+                     class="h-3 w-3 rounded border-gray-300 text-nutrigreen-500 focus:ring-nutrigreen-500">
+              <span class="text-gray-600">Remember me</span>
             </label>
-            <a href="index.php" class="text-teal-500 font-semibold hover:underline">Just Visit!</a>
+            <a href="index.php" class="text-nutrigreen-500 font-semibold hover:underline">Guest →</a>
           </div>
         </form>
+        
+        <!-- Decorative line -->
+        <div class="mt-4 pt-3 text-center">
+          <p class="text-[10px] text-gray-400">
+            <i class="fa-regular fa-shield-heart mr-0.5"></i> Secure login powered by CNO NutriMap
+          </p>
+        </div>
       </div>
     </div>
 
-    <!-- Right panel: Illustration -->
-    <div class="md:w-1/2 flex justify-center items-center p-6 bg-teal-50">
-      <img src="img/nutritional.png" alt="Nutrition Illustration" class="max-w-full h-auto rounded-lg shadow-md">
+    <!-- Right panel: Illustration - Compact -->
+    <div class="md:w-1/2 flex justify-center items-center p-4 md:p-6 illustration-panel">
+      <div class="text-center">
+        <img src="img/nutritional.png" alt="Nutrition Illustration" 
+             class="max-w-full h-auto rounded-xl shadow-lg floating-img max-h-[400px] object-contain">
+      </div>
     </div>
   </div>
 

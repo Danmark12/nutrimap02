@@ -1,12 +1,21 @@
 <?php
+ob_start();
+error_reporting(E_ERROR | E_PARSE);
 if (session_status() === PHP_SESSION_NONE) session_start();
 require '../db/config.php';
-require_once('../vendor/autoload.php');   // TCPDF
+require_once('../vendor/autoload.php'); // TCPDF
 
 // ---------- Access Control ----------
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
     header("Location: ../login.php");
     exit();
+}
+
+$barangay = isset($_GET['barangay']) ? $_GET['barangay'] : '';
+$year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+
+if (empty($barangay)) {
+    die("Barangay not specified!");
 }
 
 // ---------- Helper ----------
@@ -25,19 +34,41 @@ function calc_pct($numerator, $denominator) {
     return 0;
 }
 
-$selectedYear = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+function makeTable(array $rows, bool $hideHeader = false): string {
+    $html  = '<table cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse; font-size:11px;">';
 
-// ---------- Build Parameters ----------
-$params = [$selectedYear];
-$barangayFilter = '';
-if (!empty($_GET['barangays'])) {
-    $barangays = $_GET['barangays'];
-    $placeholders = implode(',', array_fill(0, count($barangays), '?'));
-    $barangayFilter = "AND bns.barangay IN ($placeholders)";
-    $params = array_merge($params, $barangays);
+    if (!$hideHeader) {
+        $html .= '<thead><tr>'
+              .  '<th width="75%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:left;padding:2px;line-height:2;">Indicator</th>'
+              .  '<th width="25%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:center;padding:2px;line-height:2;">No.</th>'
+              .  '</tr></thead>';
+    }
+
+    $html .= '<tbody>';
+
+    foreach ($rows as $r) {
+        $indicator = $r[0];
+        $no        = $r[1] ?? '—';
+        $pct       = $r[2] ?? '';
+
+        $html .= '<tr>';
+        $html .= '<td width="75%" style="border:1px solid #000;padding:2px;line-height:2;">'.$indicator.'</td>';
+
+        if ($pct === '' || $pct === null) {
+            $html .= '<td colspan="2" width="25%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$no.'</td>';
+        } else {
+            $html .= '<td width="12.5%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$no.'</td>';
+            $html .= '<td width="12.5%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$pct.'</td>';
+        }
+
+        $html .= '</tr>';
+    }
+
+    $html .= '</tbody></table>';
+    return $html;
 }
 
-// ---------- SQL: Latest report per user, then aggregate ----------
+// ---------- SQL: Get latest approved report per user for this barangay, then aggregate ----------
 $sql = "
 WITH latest_per_user AS (
     SELECT 
@@ -50,7 +81,7 @@ WITH latest_per_user AS (
     JOIN reports r ON bns.report_id = r.id
     WHERE r.status = 'approved'
         AND bns.year = ?
-        $barangayFilter
+        AND bns.barangay = ?
 ),
 aggregated AS (
     SELECT 
@@ -108,19 +139,21 @@ aggregated AS (
         SUM(ind30a_no) AS ind30a_no, SUM(ind30b_no) AS ind30b_no, SUM(ind30c_no) AS ind30c_no,
         SUM(ind30d_no) AS ind30d_no,
         SUM(ind31a_no) AS ind31a_no, SUM(ind31b_no) AS ind31b_no, SUM(ind31c_no) AS ind31c_no,
-        SUM(ind31d_no) AS ind31d_no, SUM(ind31e_no) AS ind31e_no, SUM(ind31f_no) AS ind31f_no
-    FROM latest_per_user
-    WHERE rn = 1
+        SUM(ind31d_no) AS ind31d_no, SUM(ind31e_no) AS ind31e_no, SUM(ind31f_no) AS ind31f_no,
+        COUNT(DISTINCT r.user_id) AS number_of_users
+    FROM latest_per_user lpu
+    JOIN reports r ON lpu.report_id = r.id
+    WHERE lpu.rn = 1
 )
 SELECT * FROM aggregated
 ";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt->execute([$year, $barangay]);
 $totals = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if(!$totals || $totals['ind1'] === null) {
-    die('No approved reports found for the selected year and barangays.');
+if (!$totals || $totals['ind1'] === null) {
+    die("No approved reports found for Barangay $barangay in year $year.");
 }
 
 // ---------- Recalculate Percentages ----------
@@ -152,28 +185,117 @@ foreach ($household_sections as $section => $labels) {
     }
 }
 
-// ---------- TCPDF Setup ----------
+// ---------- Barangay details ----------
+$normalized_barangay = ($barangay == 'Bolobolo') ? 'Pedro sa Baculio' : $barangay;
+
+function getBarangayLogo($barangay) {
+    $logos = [
+        'CNO'=>'CNO.png',
+        'Amoros'=>'Amoros.jpg',
+        'Bolisong'=>'Bolisong.jpg',
+        'Cogon'=>'Cogon.jpg',
+        'Himaya'=>'Himaya.jpg',
+        'Hinigdaan'=>'Hinigdaan.jpg',
+        'Kalabaylabay'=>'Kalabaylabay.jpg',
+        'Molugan'=>'Molugan.jpg',
+        'Bolobolo'=>'Bolobolo.jpg',
+        'Poblacion'=>'Poblacion.jpg',
+        'Kibonbon'=>'Kibonbon.jpg',
+        'Sambulawan'=>'Sambulawan.jpg',
+        'Calongonan'=>'Calongonan.jpg',
+        'Sinaloc'=>'Sinaloc.jpg',
+        'Taytay'=>'Taytay.jpg',
+        'Ulaliman'=>'Ulaliman.jpg',
+        'Pedro sa Baculio'=>'Bolobolo.jpg'
+    ];
+    return $logos[$barangay] ?? 'default.png';
+}
+
+$barangay_logo = getBarangayLogo($barangay);
+$user_count = $totals['number_of_users'] ?? 1;
+
 class MYPDF extends TCPDF {
     public $reportYear = null;
+    public $barangayName = '';
+    public $barangayLogo = '';
+    public $userCount = 1;
 
     public function Header() {
-        if($this->getPage() === 1) {
+        if($this->page == 1){
             $this->SetFont('times','B',12);
             $this->SetXY(12, 10);
             $this->MultiCell(60, 5, "BNS Form No. IC\nBarangay Nutrition Profile", 0, 'L', 0, 0);
 
-            $this->Image(__DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.png', 140, 8.5, 17);
-            $this->Image(__DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.png', 160, 8.5, 17);
-            $this->Image(__DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.png', 180, 8.5, 17);
+            // Barangay Logo - Check if file exists before trying to display
+            if($this->barangayLogo){
+                $logo_path = __DIR__ . '/../logos/barangays/' . $this->barangayLogo;
+                if (file_exists($logo_path)) {
+                    $this->Image($logo_path, 110, 8.5, 17, 0);
+                } else {
+                    // Try alternative path (singular 'barangay' folder)
+                    $alt_logo_path = __DIR__ . '/../logos/barangay/' . $this->barangayLogo;
+                    if (file_exists($alt_logo_path)) {
+                        $this->Image($alt_logo_path, 110, 8.5, 17, 0);
+                    }
+                }
+            }
+
+            // Fixed logos (4 logos total) - Check each file exists
+            $fixed_logos = [
+                ['path' => __DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.png', 'x' => 130, 'y' => 8.5, 'w' => 17, 'h' => 0],
+                ['path' => __DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.jpg', 'x' => 130, 'y' => 8.5, 'w' => 17, 'h' => 0],
+                ['path' => __DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.png', 'x' => 150, 'y' => 8.5, 'w' => 17, 'h' => 0],
+                ['path' => __DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.jpg', 'x' => 150, 'y' => 8.5, 'w' => 17, 'h' => 0],
+                ['path' => __DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.png', 'x' => 170, 'y' => 8.5, 'w' => 17, 'h' => 0],
+                ['path' => __DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.jpg', 'x' => 170, 'y' => 8.5, 'w' => 17, 'h' => 0]
+            ];
+            
+            $displayed_count = 0;
+            $current_x = 130;
+            
+            // Display Seal of El Salvador
+            $seal_path = __DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.png';
+            if (!file_exists($seal_path)) {
+                $seal_path = __DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.jpg';
+            }
+            if (file_exists($seal_path)) {
+                $this->Image($seal_path, 130, 8.5, 17, 0);
+                $displayed_count++;
+            }
+            
+            // Display NNC Logo
+            $nnc_path = __DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.png';
+            if (!file_exists($nnc_path)) {
+                $nnc_path = __DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.jpg';
+            }
+            if (file_exists($nnc_path)) {
+                $this->Image($nnc_path, 150, 8.5, 17, 0);
+                $displayed_count++;
+            }
+            
+            // Display Bagong Pilipinas Logo
+            $bp_path = __DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.png';
+            if (!file_exists($bp_path)) {
+                $bp_path = __DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.jpg';
+            }
+            if (file_exists($bp_path)) {
+                $this->Image($bp_path, 170, 8.5, 17, 0);
+                $displayed_count++;
+            }
 
             $this->SetY(35);
             $this->SetFont('times','B',14);
-            $this->Cell(0, 0, 'CONSOLIDATED BARANGAY SITUATIONAL ANALYSIS (BSA)', 0, 1, 'C');
+            $this->Cell(0, 0, 'BARANGAY SITUATIONAL ANALYSIS (BSA)', 0, 1, 'C');
 
             $this->Ln(2);
             $this->SetFont('times','',11);
             $year = $this->reportYear ?? date('Y');
-            $this->Cell(0, 0, "Calendar Year: $year | City: EL SALVADOR CITY | Province: MISAMIS ORIENTAL", 0, 1, 'C');
+            $this->Cell(0, 0, "Calendar Year: $year | Barangay: {$this->barangayName} | City: EL SALVADOR CITY | Province: MISAMIS ORIENTAL", 0, 1, 'C');
+
+            if ($this->userCount > 1) {
+                $this->Ln(2);
+                $this->SetFont('times','I',10);
+            }
 
             $this->Ln(8);
         }
@@ -189,47 +311,15 @@ class MYPDF extends TCPDF {
     }
 }
 
-// ---------- Table Builder (Same as original export) ----------
-function makeTable(array $rows, bool $hidePctHeader = false, bool $hideHeader = false): string {
-    $html  = '<table cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse; font-size:11px;">';
-    
-    if (!$hideHeader) {
-        $html .= '<thead><tr>'
-              .  '<th width="60%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:left;padding:2px;line-height:2;">Indicator</th>'
-              .  '<th width="40%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:center;padding:2px;line-height:2;">No.</th>';
-        if (!$hidePctHeader) {
-            $html .= '<th width="33%" style="padding:2px;line-height:2;"></th>';
-        }
-        $html .= '</tr></thead>';
-    }
-    
-    $html .= '<tbody>';
-    foreach ($rows as $r) {
-        $indicator = $r[0];
-        $no        = $r[1] ?? '—';
-        $pct       = $r[2] ?? '';
-        $html .= '<tr>';
-        $html .= '<td width="60%" style="border:1px solid #000;padding:2px;line-height:2;">'.$indicator.'</td>';
-        if ($pct === '' || $pct === null) {
-            $colspan = $hidePctHeader ? 1 : 2;
-            $html .= '<td colspan="'.$colspan.'" width="40%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$no.'</td>';
-        } else {
-            $html .= '<td width="20%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$no.'</td>';
-            if (!$hidePctHeader) {
-                $html .= '<td width="20%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$pct.'</td>';
-            }
-        }
-        $html .= '</tr>';
-    }
-    $html .= '</tbody></table>';
-    return $html;
-}
-
+// ---------- PDF Init ----------
 $pdf = new MYPDF('P','mm','A4',true,'UTF-8',false);
-$pdf->reportYear = $selectedYear;
+$pdf->reportYear = $year;
+$pdf->barangayName = $normalized_barangay;
+$pdf->barangayLogo = $barangay_logo;
+$pdf->userCount = $user_count;
 $pdf->SetCreator('Nutrimap');
 $pdf->SetAuthor('CNO');
-$pdf->SetTitle('CNO | Export Consolidated Barangay Situational Analysis');
+$pdf->SetTitle('CNO | ' . $normalized_barangay . ' - Consolidated Barangay Situational Analysis');
 $pdf->SetMargins(12, 50, 12);
 $pdf->SetAutoPageBreak(true,15);
 $pdf->SetFont('times','',11);
@@ -277,19 +367,19 @@ $pdf->SetY(12);
 $p2 = [];
 
 $nutri = ['8. Severely Stunted','9. Stunted'];
-for($i=1;$i<=2;$i++){
-    $p2[] = [$nutri[$i-1], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
+for($i=8;$i<=9;$i++){
+    $p2[] = [$nutri[$i-8], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
 }
 
-$p2[] = ['10. Total Number of Infants 0–5 Months Old', val($totals,'ind10')];
-$p2[] = ['11. Total Number of Infants 6–11 Months Old', val($totals,'ind11')];
-$p2[] = ['12. Total Number of Preschool Children 0–23 Months Old', val($totals,'ind12')];
-$p2[] = ['13. Total Number of Preschool Children 12–59 Months Old', val($totals,'ind13')];
-$p2[] = ['14. Total Number of Preschool Children 24–59 Months Old', val($totals,'ind14')];
-$p2[] = ['15. Total Number of Families with Wasted and Severely Wasted Preschool Children', val($totals,'ind15')];
-$p2[] = ['16. Total Number of Families with Stunted and Severely Stunted Preschool Children', val($totals,'ind16')];
-
-
+$p2 = array_merge($p2, [
+    ['10. Total Number of Infants 0–5 Months Old', val($totals,'ind10')],
+    ['11. Total Number of Infants 6–11 Months Old', val($totals,'ind11')],
+    ['12. Total Number of Preschool Children 0–23 Months Old', val($totals,'ind12')],
+    ['13. Total Number of Preschool Children 12–59 Months Old', val($totals,'ind13')],
+    ['14. Total Number of Preschool Children 24–59 Months Old', val($totals,'ind14')],
+    ['15. Total Number of Families with Wasted and Severely Wasted Preschool Children', val($totals,'ind15')],
+    ['16. Total Number of Families with Stunted and Severely Stunted Preschool Children', val($totals,'ind16')]
+]);
 $p2[] = [
     '17. Total number of Educational Institutions',
     'Public',
@@ -315,9 +405,10 @@ for($i=0;$i<count($school);$i++){
 }
 $p2[] = ['23. 0–5 Months Old Children Exclusively Breastfed', val($totals,'ind23'), ''];
 $p2[] = ['24. Households with Severely Wasted School Children', val($totals,'ind24'), ''];
+$p2[] = ['25. School Children Dewormed at Start of School Year', val($totals,'ind25'), ''];
+$p2[] = ['26. Fully Immunized Children (FIC)', val($totals,'ind26'), ''];
 
-
-$pdf->writeHTML(makeTable($p2, false, true), true, false, false, false, '');
+$pdf->writeHTML(makeTable($p2, true), true, false, false, false, '');
 
 // ---------- PAGE 3 ----------
 $pdf->AddPage();
@@ -325,15 +416,12 @@ $pdf->SetTopMargin(12);
 $pdf->SetY(12);
 
 $p3 = [];
-$p3[] = ['25. School Children Dewormed at Start of School Year', val($totals,'ind25'), ''];
-$p3[] = ['26. Fully Immunized Children (FIC)', val($totals,'ind26'), ''];
 
 $p3[] = [
     '27. Households by type of toilet facility:',
     'No.',
     '%'
 ];
-
 $toilet = ['a. Water-sealed toilet','b. Antipolo (Unsanitary Toilet)','c. Open Pit','d. Shared','e. No Toilet'];
 for($i=0;$i<count($toilet);$i++){
     $c = chr(97 + $i);
@@ -384,7 +472,7 @@ for($i=0;$i<count($dwelling);$i++){
     $p3[] = [$dwelling[$i], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
 }
 
-$pdf->writeHTML(makeTable($p3, false, true), true, false, false, false, '');
+$pdf->writeHTML(makeTable($p3, true), true, false, false, false, '');
 
 // ---------- PAGE 4 ----------
 $pdf->AddPage();
@@ -392,11 +480,10 @@ $pdf->SetTopMargin(12);
 $pdf->SetY(12);
 
 $p4 = [];
-
 $dwelling = ['c. Wooden House','d. Nipa Bamboo House','e. Barong-Barong Makeshift','f. Makeshift'];
-for($i=0;$i<count($dwelling);$i++){
+for($i=2;$i<=5;$i++){
     $c = chr(97 + $i);
-    $p4[] = [$dwelling[$i], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
+    $p4[] = [$dwelling[$i-2], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
 }
 
 $p4[] = ['32. Total Number of Households Using Iodized Salt', val($totals,'ind32')];
@@ -409,7 +496,7 @@ $p4[] = ['a. Barangay Nutrition Scholar', val($totals,'ind37a'), ''];
 $p4[] = ['b. Barangay Health Worker', val($totals,'ind37b'), ''];
 $p4[] = ['38. Total Number of Households Beneficiaries of Pantawid Pamilyang Pilipino Program', val($totals,'ind38'), ''];
 
-$pdf->writeHTML(makeTable($p4, false, true), true, false, false, false, '');
+$pdf->writeHTML(makeTable($p4, true), true, false, false, false, '');
 
 // ---------- Determine output format ----------
 $format = isset($_GET['format']) ? strtolower($_GET['format']) : 'pdf';
@@ -419,7 +506,12 @@ if($format === 'csv') {
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         $output = fopen('php://output', 'w');
-
+        
+        fputcsv($output, ['Barangay ' . $GLOBALS['normalized_barangay'] . ' - Consolidated Situational Analysis']);
+        fputcsv($output, ['Year: ' . $GLOBALS['year']]);
+        fputcsv($output, ['Consolidated from ' . $GLOBALS['user_count'] . ' BNS users (latest approved report per user)']);
+        fputcsv($output, []);
+        
         foreach($pages as $page) {
             foreach($page as $row) {
                 $cleanRow = array_map(function($v){ return $v === '—' ? '' : $v; }, $row);
@@ -432,10 +524,10 @@ if($format === 'csv') {
     }
 
     $allPages = [$p1, $p2, $p3, $p4];
-    exportCSV('Consolidated_BSA_' . $selectedYear . '.csv', $allPages);
+    exportCSV('Barangay_' . $barangay . '_Consolidated_BSA_' . $year . '.csv', $allPages);
 } else {
     ob_end_clean();
-    $pdf->Output('Consolidated_BSA_' . $selectedYear . '.pdf', 'I');
+    $pdf->Output('Barangay_' . $barangay . '_Consolidated_BSA_' . $year . '.pdf', 'I');
     exit;
 }
 ?>

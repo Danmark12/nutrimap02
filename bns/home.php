@@ -567,8 +567,8 @@ body{background:var(--surface);color:var(--text);}
 
     <!-- Tabs -->
     <div class="ntab" id="snapTabs">
-      <button class="ntab-btn active" data-tab="overview">Weight-for-Age</button>
-      <button class="ntab-btn" data-tab="schoolage">School-Age (BMI)</button>
+      <button class="ntab-btn active" data-tab="overview">Preschool Data</button>
+      <button class="ntab-btn" data-tab="schoolage">School Age Data</button>
       <button class="ntab-btn" data-tab="health">Health</button>
       <button class="ntab-btn" data-tab="watsan">WASH</button>
       <button class="ntab-btn" data-tab="livelihood">Livelihood</button>

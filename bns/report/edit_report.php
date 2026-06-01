@@ -322,7 +322,7 @@ You cannot edit this report because its status is <?= htmlspecialchars($row['sta
     <tr><td>19. Total Number of School Children (grades 1-6)</td>
         <td><input type="number" name="ind19" value="<?= $has_bns ? htmlspecialchars($row['ind19']) : '' ?>" style="width:100px;"></td>
     </tr>
-    <tr><td>20. Total Number of School Children Weighed at Start of School Year</td>
+    <tr><td>20. Actual Number of School Children Weighed at Start of School Year</td>
         <td><input type="number" name="ind20" value="<?= $has_bns ? htmlspecialchars($row['ind20']) : '' ?>" style="width:100px;"></td>
     </tr>
     <tr><td>21. Percentage (%) Coverage of School Children Measured</td>

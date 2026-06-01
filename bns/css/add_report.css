@@ -107,3 +107,18 @@ body { margin:0;
     margin-bottom:15px; 
     text-align:left; 
 }
+/* Highlight animation for empty fields */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+input:required:invalid:focus {
+    outline: none;
+}
+
+/* Optional: Add a small indicator for required fields */
+input[required] {
+    position: relative;
+}

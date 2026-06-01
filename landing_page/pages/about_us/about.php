@@ -6,25 +6,71 @@
   <title>CNO NutriMap | About Us</title>
   <link rel="icon" type="image/png" href="../../../img/CNO_Logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Config for Green Theme -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'nutrigreen': {
+              500: '#3e9a3e',
+              600: '#2e7d32',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    /* Force green color on all elements */
+    .text-teal-600, .text-teal-500, .text-teal-400, .text-teal-700,
+    .text-cyan-600, .text-cyan-500, .text-cyan-400 {
+      color: #3e9a3e !important;
+    }
+    .bg-teal-600, .bg-teal-700, .bg-teal-500,
+    .bg-cyan-600, .bg-cyan-700 {
+      background-color: #3e9a3e !important;
+    }
+    .bg-teal-600:hover, .bg-teal-700:hover,
+    .bg-cyan-600:hover, .bg-cyan-700:hover {
+      background-color: #2e7d32 !important;
+    }
+    .hover\:text-teal-600:hover, .hover\:text-teal-500:hover,
+    .hover\:text-cyan-600:hover, .hover\:text-cyan-500:hover {
+      color: #3e9a3e !important;
+    }
+    .hover\:bg-teal-700:hover, .hover\:bg-cyan-700:hover {
+      background-color: #2e7d32 !important;
+    }
+    /* Focus rings */
+    *:focus-visible {
+      outline: 2px solid #3e9a3e;
+      outline-offset: 2px;
+    }
+    /* Footer link hover */
+    .footer-links li a:hover {
+      color: #3e9a3e !important;
+    }
+  </style>
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100 text-gray-800">
 
-  <!-- Header -->
+  <!-- Header with Green Theme -->
   <header class="flex justify-between items-center px-6 md:px-10 h-14 bg-white shadow relative z-50">
     <div class="flex items-center font-bold text-2xl text-gray-700">
       <img src="../../../img/CNO_Logo.png" alt="CNO NutriMap Logo" class="h-10 mr-2">
       <img src="../../../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.png" alt="NutriMap Logo" class="h-8 mr-2">
-      <span class="text-teal-600">CNO</span><span class="ml-2">NutriMap</span>
+      <span class="text-nutrigreen-500">CNO</span><span class="ml-2">NutriMap</span>
     </div>
 
     <!-- Desktop nav -->
     <nav class="hidden md:flex items-center space-x-6 font-semibold">
-      <a href="../../../index.php" class="hover:text-teal-600">Home</a>
-      <a href="../../map.php" class="hover:text-teal-600">Map</a>
+      <a href="../../../index.php" class="hover:text-nutrigreen-500">Home</a>
+      <a href="../../map.php" class="hover:text-nutrigreen-500">Map</a>
 
       <div class="relative">
-        <button id="aboutBtn" class="flex items-center gap-1 font-semibold text-gray-700 text-teal-600 cursor-pointer focus:outline-none">
+        <button id="aboutBtn" class="flex items-center gap-1 font-semibold text-gray-700 text-nutrigreen-500 cursor-pointer focus:outline-none">
           About CNO
           <svg class="w-4 h-4 transition-transform" id="aboutArrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
@@ -32,15 +78,15 @@
         </button>
 
         <div id="aboutDropdown" class="absolute left-0 mt-2 w-40 bg-gray-100 shadow-lg rounded hidden z-50">
-          <a href="about.php" class="block px-4 py-2 hover:bg-gray-200 text-teal-600">About</a>
+          <a href="about.php" class="block px-4 py-2 hover:bg-gray-200 text-nutrigreen-500">About</a>
           <a href="profile.php" class="block px-4 py-2 hover:bg-gray-200">Profile</a>
           <a href="vision.php" class="block px-4 py-2 hover:bg-gray-200">Vision</a>
           <a href="mission.php" class="block px-4 py-2 hover:bg-gray-200">Mission</a>
         </div>
       </div>
 
-      <a href="../contact_us/contact.php" class="hover:text-teal-600">Contact Us</a>
-      <a href="../../../login.php" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Login</a>
+      <a href="../contact_us/contact.php" class="hover:text-nutrigreen-500">Contact Us</a>
+      <a href="../../../login.php" class="bg-nutrigreen-500 text-white px-4 py-2 rounded hover:bg-nutrigreen-600">Login</a>
     </nav>
 
     <!-- Mobile Burger -->
@@ -81,35 +127,41 @@
     document.addEventListener('DOMContentLoaded', () => {
       const burgerBtn = document.getElementById('burgerBtn');
       const mobileMenu = document.getElementById('mobileMenu');
-      burgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+      if (burgerBtn && mobileMenu) {
+        burgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+      }
 
       const mobileAboutBtn = document.getElementById('mobileAboutBtn');
       const mobileAboutDropdown = document.getElementById('mobileAboutDropdown');
       const mobileAboutArrow = document.getElementById('mobileAboutArrow');
-      mobileAboutBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mobileAboutDropdown.classList.toggle('hidden');
-        mobileAboutArrow.classList.toggle('rotate-180');
-      });
+      if (mobileAboutBtn && mobileAboutDropdown) {
+        mobileAboutBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          mobileAboutDropdown.classList.toggle('hidden');
+          if (mobileAboutArrow) mobileAboutArrow.classList.toggle('rotate-180');
+        });
+      }
 
       document.addEventListener('click', (e) => {
-        if(!mobileMenu.contains(e.target)){
-          mobileAboutDropdown.classList.add('hidden');
-          mobileAboutArrow.classList.remove('rotate-180');
+        if (mobileMenu && !mobileMenu.contains(e.target) && burgerBtn && !burgerBtn.contains(e.target)) {
+          if (mobileAboutDropdown) mobileAboutDropdown.classList.add('hidden');
+          if (mobileAboutArrow) mobileAboutArrow.classList.remove('rotate-180');
         }
       });
 
       const aboutBtn = document.getElementById('aboutBtn');
       const aboutDropdown = document.getElementById('aboutDropdown');
       const aboutArrow = document.getElementById('aboutArrow');
-      aboutBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        aboutDropdown.classList.toggle('hidden');
-        aboutArrow.classList.toggle('rotate-180');
-      });
+      if (aboutBtn && aboutDropdown) {
+        aboutBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          aboutDropdown.classList.toggle('hidden');
+          if (aboutArrow) aboutArrow.classList.toggle('rotate-180');
+        });
+      }
       document.addEventListener('click', () => {
-        aboutDropdown.classList.add('hidden');
-        aboutArrow.classList.remove('rotate-180');
+        if (aboutDropdown) aboutDropdown.classList.add('hidden');
+        if (aboutArrow) aboutArrow.classList.remove('rotate-180');
       });
     });
   </script>
@@ -123,7 +175,7 @@
         CNO NutriMap is a project developed by NBSC students in collaboration with the City Nutrition Office (CNO) of El Salvador, Misamis Oriental. Our mission is to provide an interactive and informative platform to help the community stay informed about local nutrition data and initiatives.
       </p>
       <p>
-        This web application allows you to visualize key nutrition data on a map, providing insights into the health status of our barangays. We believe that by making this information accessible, we can empower community members and stakeholders to make informed decisions and work together towards a healthier future.
+        This web allows you to visualize key nutrition data on a map, providing insights into the health status of our barangays. We believe that by making this information accessible, we can empower community members and stakeholders to make informed decisions and work together towards a healthier future.
       </p>
       <p>
         Our goal is to promote transparency, support the CNO's mission, and encourage community engagement in addressing nutrition-related challenges.
@@ -134,13 +186,13 @@
       <h2 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8">Our Contribution to the SDGs</h2>
       <div class="flex flex-col gap-6 md:gap-8">
         <div class="bg-white p-6 rounded-xl shadow-lg">
-          <h3 class="text-xl md:text-2xl font-bold text-teal-600 mb-2 text-center">SDG 2: Zero Hunger</h3>
+          <h3 class="text-xl md:text-2xl font-bold text-nutrigreen-500 mb-2 text-center">SDG 2: Zero Hunger</h3>
           <p class="text-gray-700 text-justify">
             By providing real-time data on nutrition status, CNO NutriMap helps the City Nutrition Office and other organizations identify areas with high malnutrition rates. This allows for targeted interventions and the efficient allocation of resources to combat hunger and food insecurity in the community.
           </p>
         </div>
         <div class="bg-white p-6 rounded-xl shadow-lg">
-          <h3 class="text-xl md:text-2xl font-bold text-teal-600 mb-2 text-center">SDG 3: Good Health and Well-being</h3>
+          <h3 class="text-xl md:text-2xl font-bold text-nutrigreen-500 mb-2 text-center">SDG 3: Good Health and Well-being</h3>
           <p class="text-gray-700 text-justify">
             The project contributes to good health and well-being by raising public awareness of nutrition issues. By making health data transparent and easy to understand, we empower citizens to take an active role in their own health and support public health campaigns.
           </p>
@@ -149,14 +201,14 @@
     </section>
   </main>
 
-  <!-- FOOTER -->
+  <!-- FOOTER with Green Theme -->
   <footer class="footer mt-auto bg-gray-800 text-gray-300 py-10 relative z-10">
     <div class="footer-container max-w-7xl mx-auto px-4">
       <div class="footer-grid grid gap-8 md:grid-cols-5">
         <div class="footer-logo md:col-span-2 flex flex-col items-start">
           <div class="logo-text flex items-center mb-4">
             <img src="../../../img/CNO_Logo.png" alt="CNO NutriMap Logo" class="h-10 mr-2 rounded-lg">
-            <span class="logo-primary text-cyan-600 text-xl font-bold">CNO</span>
+            <span class="logo-primary text-nutrigreen-500 text-xl font-bold">CNO</span>
             <span class="logo-secondary text-white text-xl font-bold ml-1">NutriMap</span>
           </div>
           <p class="footer-desc text-sm">A tool to visualize health and nutrition data for children in El Salvador City.</p>
@@ -164,25 +216,25 @@
         <div>
           <h3 class="footer-title text-white font-semibold mb-4">About Us</h3>
           <ul class="footer-links space-y-2">
-            <li><a href="mission.php" class="hover:text-cyan-600">Our Mission</a></li>
-            <li><a href="vision.php" class="hover:text-cyan-600">Our Vision</a></li>
+            <li><a href="mission.php" class="hover:text-nutrigreen-500">Our Mission</a></li>
+            <li><a href="vision.php" class="hover:text-nutrigreen-500">Our Vision</a></li>
           </ul>
         </div>
         <div>
           <h3 class="footer-title text-white font-semibold mb-4">Quick Links</h3>
           <ul class="footer-links space-y-2">
-            <li><a href="../../map.php" class="hover:text-cyan-600">Map</a></li>
-            <li><a href="../contact_us/contact.php" class="hover:text-cyan-600">Contact Us</a></li>
+            <li><a href="../../map.php" class="hover:text-nutrigreen-500">Map</a></li>
+            <li><a href="../contact_us/contact.php" class="hover:text-nutrigreen-500">Contact Us</a></li>
           </ul>
         </div>
         <div>
           <h3 class="footer-title text-white font-semibold mb-4">Legal & Support</h3>
           <ul class="footer-links space-y-2">
-            <li><a href="../legal_and_support/terms.php" class="hover:text-cyan-600">Terms of Use</a></li>
-            <li><a href="../legal_and_support/privacy.php" class="hover:text-cyan-600">Privacy Policy</a></li>
-            <li><a href="../legal_and_support/cookies.php" class="hover:text-cyan-600">Cookies</a></li>
-            <li><a href="../help_and_support/help.php" class="hover:text-cyan-600">Help</a></li>
-            <li><a href="../help_and_support/faqs.php" class="hover:text-cyan-600">FAQs</a></li>
+            <li><a href="../legal_and_support/terms.php" class="hover:text-nutrigreen-500">Terms of Use</a></li>
+            <li><a href="../legal_and_support/privacy.php" class="hover:text-nutrigreen-500">Privacy Policy</a></li>
+            <li><a href="../legal_and_support/cookies.php" class="hover:text-nutrigreen-500">Cookies</a></li>
+            <li><a href="../help_and_support/help.php" class="hover:text-nutrigreen-500">Help</a></li>
+            <li><a href="../help_and_support/faqs.php" class="hover:text-nutrigreen-500">FAQs</a></li>
           </ul>
         </div>
       </div>

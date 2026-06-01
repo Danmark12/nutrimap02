@@ -299,7 +299,7 @@ table th:nth-child(2) {
   </tr>
   <tr><td>18. Total Number of Children Enrolled in Kindergarten</td><td><?= $has_bns ? val($row,'ind18','int') : '—' ?></td></tr>
   <tr><td>19. Total Number of School Children (grades 1-6)</td><td><?= $has_bns ? val($row,'ind19','int') : '—' ?></td></tr>
-  <tr><td>20. Total Number of School Children Weighed at Start of School Year</td><td><?= $has_bns ? val($row,'ind20','int') : '—' ?></td></tr>
+  <tr><td>20. Actual Number of School Children Weighed at Start of School Year</td><td><?= $has_bns ? val($row,'ind20','int') : '—' ?></td></tr>
   <tr><td>21. Percentage (%) Coverage of School Children Measured</td><td><?= $has_bns ? (isset($row['ind21'])?number_format((float)$row['ind21'],2).'%':'—') : '—' ?></td></tr>
   <tr>
     <td>22. Number and Percent (%) of School Children According to Nutritional Status Body Mas Index</td>

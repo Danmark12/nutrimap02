@@ -283,7 +283,7 @@ $p2[] = ['b. Number of Elementary Schools', val($totals,'ind17b_public'), val($t
 
 $p2[] = ['18. Total Number of Children Enrolled in Kindergarten', val($totals,'ind18'), ''];
 $p2[] = ['19. Total Number of School Children (Grades 1–6)', val($totals,'ind19'), ''];
-$p2[] = ['20. Total Number of School Children Weighed at Start of School Year', val($totals,'ind20'), ''];
+$p2[] = ['20. Actual Number of School Children Weighed at Start of School Year', val($totals,'ind20'), ''];
 $p2[] = ['21. Percentage Coverage of School Children Measured', val($totals,'ind21','pct')];
 
 // School nutrition
@@ -307,6 +307,8 @@ $pdf->writeHTML(makeTable($p2, true), true, false, false, false, '');
 // ---------- PAGE 3 ----------
 
 $pdf->AddPage();
+$pdf->SetTopMargin(12); // Move content up to use space at top
+$pdf->SetY(12);   
 $p3 = [];
 
 $p3[] = ['25. School Children Dewormed at Start of School Year', val($totals,'ind25'), ''];

@@ -102,7 +102,7 @@ if (!empty($user['profile_pic']) && file_exists("../uploads/" . $user['profile_p
 /* Active page highlight */
 .menu-links li.active,
 #settingsMenu li.active { 
-  background-color: #00AEEF; 
+  background-color: #009688; 
   color: #fff; 
 }
 .menu-links li.active i,
@@ -207,8 +207,7 @@ if (!empty($user['profile_pic']) && file_exists("../uploads/" . $user['profile_p
     <li data-url="nutritional_map.php"><i class="fa fa-map"></i>Nutritional Map</li>
     <li data-url="report_history.php"><i class="fas fa-tasks"></i> Report History</li>
     <li data-url="users.php"><i class="fa fa-user"></i>Users</li>
-    <li data-url="activity_logs.php"><i class="fas fa-history"></i>Activity Logs</li>
-    <!-- Settings dropdown -->
+    <li data-url="activity_logs.php"><i class="fas fa-history"></i>Activity Logs</li>    <!-- Settings dropdown -->
     <li class="settings-dropdown">
       <div class="settings-btn" id="settingsBtn">
         <span><i class="fa fa-cog"></i> Settings</span>

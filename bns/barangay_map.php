@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require '../db/config.php';
 
-// Only CNO
+// Only BNS
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
     header("Location: ../login.php");
     exit();
@@ -70,15 +70,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
 #chart-tooltip {
   display: none;  /* hide by default */
   position: absolute;
-  top: 200px;
-  left: 80px;
+  top: 250px;
+  left: 150px;
   z-index: 1000;
   background: rgba(255,255,255,0.95);
   padding: 8px;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
   max-width: 230px;
-  max-height: 240px;
+  max-height: 180px;
   overflow-y: auto;
   pointer-events: none;
   flex-direction: column;
@@ -142,6 +142,109 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
   transform: scale(1.05);
 }
 
+/* NEW: Timeline Slider Styles */
+.year-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+  font-weight: 500;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.year-labels span.has-data {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.year-labels span.has-data:hover {
+  background: #e0e7ff;
+}
+
+.year-labels span.no-data {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.timeline-track-outer {
+  position: relative;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+#timelineFill {
+  position: absolute;
+  height: 6px;
+  background: linear-gradient(90deg, #017432, #02a046);
+  border-radius: 99px;
+  pointer-events: none;
+}
+
+.timeline-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2.5px solid #017432;
+  border-radius: 50%;
+  top: -5px;
+  cursor: grab;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.timeline-handle:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(1,116,50,0.3);
+}
+
+/* NEW: Population Toggle */
+.population-toggle {
+  display: flex;
+  gap: 8px;
+  background: #f3f4f6;
+  padding: 4px;
+  border-radius: 40px;
+  margin-bottom: 15px;
+}
+
+.population-toggle button {
+  flex: 1;
+  border: none;
+  padding: 6px 0;
+  border-radius: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.population-toggle button.active {
+  background: #017432;
+  color: white;
+}
+
+.population-toggle button:not(.active) {
+  background: transparent;
+  color: #6b7280;
+}
+
+/* Keep your original select styling */
+#yearFilter {
+  margin-top: 1px;
+  margin-bottom: 15px;
+}
+
+.active-gradient-cell {
+  outline: 2px solid #000;
+}
 </style>
 </head>
 <body class="bg-gray-50 font-sans flex flex-col min-h-screen">
@@ -184,26 +287,39 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'BNS') {
 </div>
       </div>
       <div id="legend-buttons" class="w-full lg:w-60 bg-gray-50 border border-gray-300 rounded p-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-600">Select Year</label>
-          <select id="yearFilter" class="mt-1 block w-32 rounded border border-gray-300 shadow-sm"></select>
+        <!-- Population Toggle -->
+        <div class="population-toggle">
+          <button id="preschoolBtn" class="active">Preschool</button>
+          <button id="schoolBtn">School Age</button>
         </div>
+        
+        <!-- Year Range Timeline -->
+        <div style="margin-bottom: 15px;">
+          <label class="block text-sm font-medium text-gray-600 mb-1">Year Range</label>
+          <div class="year-labels" id="yearLabels"></div>
+          <div class="timeline-track-outer" id="timelineTrack">
+            <div id="timelineFill"></div>
+            <div class="timeline-handle" id="timelineHandleLeft" style="left:0%"></div>
+            <div class="timeline-handle" id="timelineHandleRight" style="left:100%"></div>
+          </div>
+        </div>
+        
         <h2 class="text-md font-semibold mb-3">Legend</h2>
        <ul class="space-y-2 text-sm">
   <li data-field="all" data-label="All Indicators" data-color="#4B5563" class="cursor-pointer">
     <span class="w-4 h-4 mr-2 bg-gray-400 inline-block"></span>All
   </li>
-  <li data-field="UNDERWEIGHT" data-label="Underweight" data-color="#FFFF00" class="cursor-pointer">
-    <span class="w-4 h-4 mr-2 bg-yellow-400 inline-block"></span>Underweight
+  <li data-field="UNDERWEIGHT" data-label="Underweight" data-color="#d4a800" class="cursor-pointer">
+    <span class="w-4 h-4 mr-2 inline-block" style="background:#d4a800"></span>Underweight
   </li>
-   <li data-field="WASTED" data-label="Wasted" data-color="#FFA500" class="cursor-pointer">
-    <span class="w-4 h-4 mr-2 bg-orange-500 inline-block"></span>Wasted
+   <li data-field="WASTED" data-label="Wasted" data-color="#F97316" class="cursor-pointer">
+    <span class="w-4 h-4 mr-2 inline-block" style="background:#F97316"></span>Wasted
   </li>
-  <li data-field="OVERWEIGHT_OBESE" data-label="Overweight/Obese" data-color="#0000FF" class="cursor-pointer">
-    <span class="w-4 h-4 mr-2 bg-blue-500  inline-block"></span>Overweight/Obese
+  <li data-field="OVERWEIGHT_OBESE" data-label="Overweight/Obese" data-color="#3B82F6" class="cursor-pointer">
+    <span class="w-4 h-4 mr-2 inline-block" style="background:#3B82F6"></span>Overweight/Obese
   </li>
-  <li data-field="STUNTED" data-label="Stunted" data-color="#FF0000" class="cursor-pointer">
-    <span class="w-4 h-4 mr-2 bg-red-600 inline-block"></span>Stunted
+  <li data-field="STUNTED" data-label="Stunted" data-color="#EF4444" class="cursor-pointer">
+    <span class="w-4 h-4 mr-2 inline-block" style="background:#EF4444"></span>Stunted
   </li>
 </ul>
 

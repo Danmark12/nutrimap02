@@ -11,15 +11,14 @@ if (!file_exists($geojsonPath)) {
 }
 $geojson = json_decode(file_get_contents($geojsonPath), true);
 
-// 2. Get latest report per USER per barangay per year
+// 2. Get latest report per USER per barangay per year for SCHOOL data
 $sql = "SELECT 
             br.barangay,
             br.year,
             r.user_id,
-            br.ind9 as total_measured,
-            br.ind9b1_no, br.ind9b2_no, br.ind9b3_no,
-            br.ind9b4_no, br.ind9b5_no, br.ind9b6_no,
-            br.ind9b7_no, br.ind9b8_no, br.ind9b9_no,
+            br.ind20 as school_total_measured,
+            br.ind22a_no, br.ind22b_no, br.ind22c_no, br.ind22d_no,
+            br.ind22e_no, br.ind22f_no, br.ind22g_no,
             r.created_at
         FROM bns_reports br
         JOIN reports r ON br.report_id = r.id
@@ -51,30 +50,26 @@ foreach ($latestPerUser as $report) {
         $aggregated[$key] = [
             'barangay' => $report['barangay'],
             'year' => $report['year'],
-            'total_measured' => 0,
-            'ind9b1_no' => 0,
-            'ind9b2_no' => 0,
-            'ind9b3_no' => 0,
-            'ind9b4_no' => 0,
-            'ind9b5_no' => 0,
-            'ind9b6_no' => 0,
-            'ind9b7_no' => 0,
-            'ind9b8_no' => 0,
-            'ind9b9_no' => 0,
+            'school_total_measured' => 0,
+            'ind22a_no' => 0,
+            'ind22b_no' => 0,
+            'ind22c_no' => 0,
+            'ind22d_no' => 0,
+            'ind22e_no' => 0,
+            'ind22f_no' => 0,
+            'ind22g_no' => 0,
             'users_count' => 0
         ];
     }
     
-    $aggregated[$key]['total_measured'] += intval($report['total_measured']);
-    $aggregated[$key]['ind9b1_no'] += intval($report['ind9b1_no']);
-    $aggregated[$key]['ind9b2_no'] += intval($report['ind9b2_no']);
-    $aggregated[$key]['ind9b3_no'] += intval($report['ind9b3_no']);
-    $aggregated[$key]['ind9b4_no'] += intval($report['ind9b4_no']);
-    $aggregated[$key]['ind9b5_no'] += intval($report['ind9b5_no']);
-    $aggregated[$key]['ind9b6_no'] += intval($report['ind9b6_no']);
-    $aggregated[$key]['ind9b7_no'] += intval($report['ind9b7_no']);
-    $aggregated[$key]['ind9b8_no'] += intval($report['ind9b8_no']);
-    $aggregated[$key]['ind9b9_no'] += intval($report['ind9b9_no']);
+    $aggregated[$key]['school_total_measured'] += intval($report['school_total_measured']);
+    $aggregated[$key]['ind22a_no'] += intval($report['ind22a_no']);
+    $aggregated[$key]['ind22b_no'] += intval($report['ind22b_no']);
+    $aggregated[$key]['ind22c_no'] += intval($report['ind22c_no']);
+    $aggregated[$key]['ind22d_no'] += intval($report['ind22d_no']);
+    $aggregated[$key]['ind22e_no'] += intval($report['ind22e_no']);
+    $aggregated[$key]['ind22f_no'] += intval($report['ind22f_no']);
+    $aggregated[$key]['ind22g_no'] += intval($report['ind22g_no']);
     $aggregated[$key]['users_count']++;
 }
 
@@ -89,39 +84,34 @@ foreach ($aggregated as $row) {
     if (!isset($lookup[$b])) $lookup[$b] = [];
     if (!in_array($y, $allYears)) $allYears[] = $y;
     
-    $totalMeasured = $row['total_measured'] > 0 ? $row['total_measured'] : 1;
+    $totalMeasured = $row['school_total_measured'] > 0 ? $row['school_total_measured'] : 1;
     
     // Calculate percentages using the correct formulas
-    $underweightCount = $row['ind9b1_no'] + $row['ind9b2_no'];
-    $underweightPct = round(($underweightCount / $totalMeasured) * 100, 1);
-    
-    $normalCount = $row['ind9b3_no'];
-    $normalPct = round(($normalCount / $totalMeasured) * 100, 1);
-    
-    $wastedCount = $row['ind9b4_no'] + $row['ind9b5_no'];
+    $wastedCount = $row['ind22a_no'] + $row['ind22b_no'];
     $wastedPct = round(($wastedCount / $totalMeasured) * 100, 1);
     
-    $overweightObeseCount = $row['ind9b6_no'] + $row['ind9b7_no'];
-    $overweightObesePct = round(($overweightObeseCount / $totalMeasured) * 100, 1);
-    
-    $stuntedCount = $row['ind9b8_no'] + $row['ind9b9_no'];
+    $stuntedCount = $row['ind22c_no'] + $row['ind22d_no'];
     $stuntedPct = round(($stuntedCount / $totalMeasured) * 100, 1);
+    
+    $normalCount = $row['ind22e_no'];
+    $normalPct = round(($normalCount / $totalMeasured) * 100, 1);
+    
+    $overweightObeseCount = $row['ind22f_no'] + $row['ind22g_no'];
+    $overweightObesePct = round(($overweightObeseCount / $totalMeasured) * 100, 1);
     
     // Store in lookup array
     $lookup[$b][$y] = [
-        'TOTAL_MEASURED' => $totalMeasured,
-        'UNDERWEIGHT' => $underweightPct,
-        'UNDERWEIGHT_COUNT' => $underweightCount,
-        'NORMAL' => $normalPct,
-        'NORMAL_COUNT' => $normalCount,
+        'SCHOOL_TOTAL_MEASURED' => $totalMeasured,
         'WASTED' => $wastedPct,
         'WASTED_COUNT' => $wastedCount,
-        'OVERWEIGHT_OBESE' => $overweightObesePct,
-        'OVERWEIGHT_OBESE_COUNT' => $overweightObeseCount,
         'STUNTED' => $stuntedPct,
         'STUNTED_COUNT' => $stuntedCount,
-        'ALL' => max($underweightPct, $wastedPct, $overweightObesePct, $stuntedPct),
-        'TOTAL_MALNUTRITION' => $underweightPct + $wastedPct + $overweightObesePct + $stuntedPct,
+        'NORMAL' => $normalPct,
+        'NORMAL_COUNT' => $normalCount,
+        'OVERWEIGHT_OBESE' => $overweightObesePct,
+        'OVERWEIGHT_OBESE_COUNT' => $overweightObeseCount,
+        'ALL' => max($wastedPct, $stuntedPct, $overweightObesePct),
+        'TOTAL_MALNUTRITION' => $wastedPct + $stuntedPct + $overweightObesePct,
         'USERS_CONTRIBUTED' => $row['users_count']
     ];
 }
@@ -161,12 +151,12 @@ foreach ($geojson['features'] as $feature) {
             $newFeature['properties']['YEAR'] = $year;
             $newFeature['properties']['HAS_DATA'] = false;
             $newFeature['properties']['NO_APPROVED_DATA'] = true;
-            $newFeature['properties']['UNDERWEIGHT'] = null;
             $newFeature['properties']['WASTED'] = null;
-            $newFeature['properties']['OVERWEIGHT_OBESE'] = null;
             $newFeature['properties']['STUNTED'] = null;
+            $newFeature['properties']['OVERWEIGHT_OBESE'] = null;
+            $newFeature['properties']['NORMAL'] = null;
             $newFeature['properties']['ALL'] = null;
-            $newFeature['properties']['TOTAL_MEASURED'] = 0;
+            $newFeature['properties']['SCHOOL_TOTAL_MEASURED'] = 0;
             $newFeature['properties']['USERS_CONTRIBUTED'] = 0;
         }
         $newFeatures[] = $newFeature;
@@ -174,8 +164,6 @@ foreach ($geojson['features'] as $feature) {
 }
 
 $geojson['features'] = $newFeatures;
-
-// Add metadata
 $geojson['metadata'] = [
     'availableYears' => $allYears,
     'minYear' => $minYear,

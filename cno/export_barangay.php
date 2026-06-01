@@ -11,7 +11,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'CNO') {
     exit();
 }
 
-$selectedYear = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+$barangay = isset($_GET['barangay']) ? $_GET['barangay'] : '';
+$year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+
+if (empty($barangay)) {
+    die("Barangay not specified!");
+}
 
 // ---------- Helper ----------
 function val(array $a, string $k, string $fmt = 'int'): string {
@@ -22,10 +27,16 @@ function val(array $a, string $k, string $fmt = 'int'): string {
     return htmlspecialchars((string)$a[$k]);
 }
 
+function calc_pct($numerator, $denominator) {
+    if ($denominator > 0) {
+        return ($numerator / $denominator) * 100;
+    }
+    return 0;
+}
+
 function makeTable(array $rows, bool $hideHeader = false): string {
     $html  = '<table cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse; font-size:11px;">';
 
-    // ✅ Show header ONLY on first page
     if (!$hideHeader) {
         $html .= '<thead><tr>'
               .  '<th width="60%" style="border:1px solid #000;background:#dcdcdc;font-weight:bold;text-align:left;padding:2px;line-height:2;">Indicator</th>'
@@ -41,11 +52,8 @@ function makeTable(array $rows, bool $hideHeader = false): string {
         $pct       = $r[2] ?? '';
 
         $html .= '<tr>';
-
-        // Indicator column
         $html .= '<td width="60%" style="border:1px solid #000;padding:2px;line-height:2;">'.$indicator.'</td>';
 
-        // If no percent → span full numeric width
         if ($pct === '' || $pct === null) {
             $html .= '<td colspan="2" width="40%" style="border:1px solid #000;text-align:center;padding:2px;line-height:2;">'.$no.'</td>';
         } else {
@@ -56,77 +64,130 @@ function makeTable(array $rows, bool $hideHeader = false): string {
         $html .= '</tr>';
     }
 
-    $html .= '</tbody></table>';
+    $html .= '</tbody><tr>';
     return $html;
 }
 
-// ---------- Get Report ----------
-$report_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($report_id <= 0) die("Report not found!");
+// ---------- SQL: Get latest approved report per user for this barangay, then aggregate ----------
+$sql = "
+WITH latest_per_user AS (
+    SELECT 
+        bns.*,
+        ROW_NUMBER() OVER (
+            PARTITION BY bns.barangay, r.user_id 
+            ORDER BY r.report_date DESC, r.report_time DESC
+        ) AS rn
+    FROM bns_reports bns
+    JOIN reports r ON bns.report_id = r.id
+    WHERE r.status = 'approved'
+        AND bns.year = ?
+        AND bns.barangay = ?
+),
+aggregated AS (
+    SELECT 
+        SUM(ind1) AS ind1,
+        SUM(ind_male) AS ind_male,
+        SUM(ind_female) AS ind_female,
+        SUM(ind2) AS ind2,
+        SUM(ind3) AS ind3,
+        SUM(ind4) AS ind4,
+        SUM(ind5) AS ind5,
+        SUM(ind6a) AS ind6a,
+        SUM(ind6b) AS ind6b,
+        SUM(ind7) AS ind7,
+        SUM(ind8) AS ind8,
+        SUM(ind9) AS ind9,
+        SUM(ind10) AS ind10,
+        SUM(ind11) AS ind11,
+        SUM(ind12) AS ind12,
+        SUM(ind13) AS ind13,
+        SUM(ind14) AS ind14,
+        SUM(ind15) AS ind15,
+        SUM(ind16) AS ind16,
+        SUM(ind17a_public) AS ind17a_public,
+        SUM(ind17a_private) AS ind17a_private,
+        SUM(ind17b_public) AS ind17b_public,
+        SUM(ind17b_private) AS ind17b_private,
+        SUM(ind18) AS ind18,
+        SUM(ind19) AS ind19,
+        SUM(ind20) AS ind20,
+        SUM(ind23) AS ind23,
+        SUM(ind24) AS ind24,
+        SUM(ind25) AS ind25,
+        SUM(ind26) AS ind26,
+        SUM(ind32) AS ind32,
+        SUM(ind33) AS ind33,
+        SUM(ind34) AS ind34,
+        SUM(ind35) AS ind35,
+        SUM(ind36) AS ind36,
+        SUM(ind37a) AS ind37a,
+        SUM(ind37b) AS ind37b,
+        SUM(ind38) AS ind38,
+        SUM(ind9b1_no) AS ind9b1_no, SUM(ind9b2_no) AS ind9b2_no, SUM(ind9b3_no) AS ind9b3_no,
+        SUM(ind9b4_no) AS ind9b4_no, SUM(ind9b5_no) AS ind9b5_no, SUM(ind9b6_no) AS ind9b6_no,
+        SUM(ind9b7_no) AS ind9b7_no, SUM(ind9b8_no) AS ind9b8_no, SUM(ind9b9_no) AS ind9b9_no,
+        SUM(ind22a_no) AS ind22a_no, SUM(ind22b_no) AS ind22b_no, SUM(ind22c_no) AS ind22c_no,
+        SUM(ind22d_no) AS ind22d_no, SUM(ind22e_no) AS ind22e_no, SUM(ind22f_no) AS ind22f_no,
+        SUM(ind22g_no) AS ind22g_no,
+        SUM(ind27a_no) AS ind27a_no, SUM(ind27b_no) AS ind27b_no, SUM(ind27c_no) AS ind27c_no,
+        SUM(ind27d_no) AS ind27d_no, SUM(ind27e_no) AS ind27e_no,
+        SUM(ind28a_no) AS ind28a_no, SUM(ind28b_no) AS ind28b_no, SUM(ind28c_no) AS ind28c_no,
+        SUM(ind28d_no) AS ind28d_no,
+        SUM(ind29a_no) AS ind29a_no, SUM(ind29b_no) AS ind29b_no, SUM(ind29c_no) AS ind29c_no,
+        SUM(ind29d_no) AS ind29d_no, SUM(ind29e_no) AS ind29e_no, SUM(ind29f_no) AS ind29f_no,
+        SUM(ind29g_no) AS ind29g_no,
+        SUM(ind30a_no) AS ind30a_no, SUM(ind30b_no) AS ind30b_no, SUM(ind30c_no) AS ind30c_no,
+        SUM(ind30d_no) AS ind30d_no,
+        SUM(ind31a_no) AS ind31a_no, SUM(ind31b_no) AS ind31b_no, SUM(ind31c_no) AS ind31c_no,
+        SUM(ind31d_no) AS ind31d_no, SUM(ind31e_no) AS ind31e_no, SUM(ind31f_no) AS ind31f_no,
+        COUNT(DISTINCT r.user_id) AS number_of_users
+    FROM latest_per_user lpu
+    JOIN reports r ON lpu.report_id = r.id
+    WHERE lpu.rn = 1
+)
+SELECT * FROM aggregated
+";
 
-// ---------- Fields ----------
-$base = [
-    'ind1','ind_male','ind_female','ind2','ind3','ind4','ind5',
-    'ind6a','ind6b','ind7','ind8','ind9','ind9a','ind10','ind11',
-    'ind12','ind13','ind14','ind15','ind16','ind18','ind19',
-    'ind20','ind21','ind23','ind24','ind25','ind26',
-     'ind32','ind33','ind34','ind35','ind36',
-    'ind37a','ind37b','ind38'
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$year, $barangay]);
+$totals = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$totals || $totals['ind1'] === null) {
+    die("No approved reports found for Barangay $barangay in year $year.");
+}
+
+// ---------- Recalculate Percentages ----------
+$totals['ind9a'] = calc_pct($totals['ind9'], $totals['ind8']);
+
+for ($i = 1; $i <= 9; $i++) {
+    $totals["ind9b{$i}_pct"] = calc_pct($totals["ind9b{$i}_no"], $totals['ind9']);
+}
+
+$total_school_children = $totals['ind18'] + $totals['ind19'];
+$totals['ind21'] = calc_pct($totals['ind20'], $total_school_children);
+
+$school_labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+foreach ($school_labels as $label) {
+    $totals["ind22{$label}_pct"] = calc_pct($totals["ind22{$label}_no"], $totals['ind20']);
+}
+
+$household_sections = [
+    '27' => ['a','b','c','d','e'],
+    '28' => ['a','b','c','d'],
+    '29' => ['a','b','c','d','e','f','g'],
+    '30' => ['a','b','c','d'],
+    '31' => ['a','b','c','d','e','f']
 ];
 
-$groups = [
-    '9b'  => ['ind9b1','ind9b2','ind9b3','ind9b4','ind9b5','ind9b6','ind9b7','ind9b8','ind9b9'],
-    '22'  => ['ind22a','ind22b','ind22c','ind22d','ind22e','ind22f','ind22g'],
-    '27'  => ['ind27a','ind27b','ind27c','ind27d','ind27e'],
-    '28'  => ['ind28a','ind28b','ind28c','ind28d'],
-    '29'  => ['ind29a','ind29b','ind29c','ind29d','ind29e','ind29f','ind29g'],
-    '30'  => ['ind30a','ind30b','ind30c','ind30d'],
-    '31'  => ['ind31a','ind31b','ind31c','ind31d','ind31e','ind31f'],
-];
-
-// ---------- SELECT fields ----------
-$sel = [];
-foreach($base as $f) $sel[] = "SUM(bns.$f) AS $f";
-foreach($groups as $arr){
-    foreach($arr as $f){
-        $sel[] = "SUM(bns.{$f}_no)  AS {$f}_no";
-        $sel[] = "SUM(bns.{$f}_pct) AS {$f}_pct";
+foreach ($household_sections as $section => $labels) {
+    foreach ($labels as $label) {
+        $totals["ind{$section}{$label}_pct"] = calc_pct($totals["ind{$section}{$label}_no"], $totals['ind2']);
     }
 }
 
-// keep only numeric ones for 17a, 17b
-$sel[]="SUM(bns.ind17a_public)  AS ind17a_public";
-$sel[]="SUM(bns.ind17a_private) AS ind17a_private";
-$sel[]="SUM(bns.ind17b_public)  AS ind17b_public";
-$sel[]="SUM(bns.ind17b_private) AS ind17b_private";
-$sel[]="SUM(bns.ind37a) AS ind37a";
-$sel[]="SUM(bns.ind37b) AS ind37b";
+// ---------- Barangay details ----------
+$normalized_barangay = ($barangay == 'Bolobolo') ? 'Pedro sa Baculio' : $barangay;
 
-// ---------- Fetch the report ----------
-$sql = "SELECT ".implode(",", $sel)." 
-        FROM bns_reports bns
-        JOIN reports r ON bns.report_id = r.id
-        WHERE r.status = 'approved' AND bns.report_id = :report_id
-        LIMIT 1";
-$stmt = $pdo->prepare($sql);
-$stmt->execute(['report_id'=>$report_id]);
-$totals = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$totals) die("Report not found or not approved!");
-
-// ---------- Get Report Details ----------
-$stmt = $pdo->prepare("
-    SELECT r.id, r.report_date, r.report_time, r.status, b.barangay,
-    CASE WHEN b.barangay='Bolobolo' THEN 'Pedro sa Baculio' ELSE b.barangay END AS normalized_barangay
-    FROM bns_reports b
-    JOIN reports r ON b.report_id = r.id
-    WHERE b.report_id = :report_id
-    LIMIT 1
-");
-$stmt->execute(['report_id' => $report_id]);
-$report = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$report) die("Report not found!");
-
-// ---------- Barangay logo ----------
 function getBarangayLogo($barangay) {
     $logos = [
         'CNO'=>'CNO.png','Amoros'=>'Amoros.jpg','Bolisong'=>'Bolisong.jpg',
@@ -139,13 +200,15 @@ function getBarangayLogo($barangay) {
     ];
     return $logos[$barangay] ?? 'default.png';
 }
-$barangay_logo = getBarangayLogo($report['normalized_barangay'] ?? '');
-$barangay_name = $report['normalized_barangay'] ?? '—';
+
+$barangay_logo = getBarangayLogo($normalized_barangay);
+$user_count = $totals['number_of_users'] ?? 1;
 
 class MYPDF extends TCPDF {
     public $reportYear = null;
     public $barangayName = '';
     public $barangayLogo = '';
+    public $userCount = 1;
 
     public function Header() {
         // Only show all logos and titles on the first page
@@ -158,7 +221,7 @@ class MYPDF extends TCPDF {
                 $this->Image(__DIR__ . '/../logos/barangay/' . $this->barangayLogo, 110, 8.5, 17, 0);
             }
 
-            // Fixed logos
+            // Fixed logos (3 logos)
             $this->Image(__DIR__.'/../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.jpg', 130, 8.5, 17, 0);
             $this->Image(__DIR__.'/../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.jpg', 150, 8.5, 17, 0);
             $this->Image(__DIR__.'/../logos/fixed/Bagong-Pilipinas-logo.jpg', 170, 8.5, 17, 0);
@@ -172,31 +235,36 @@ class MYPDF extends TCPDF {
             $year = $this->reportYear ?? date('Y');
             $this->Cell(0, 0, "Calendar Year: $year | Barangay: {$this->barangayName} | City: EL SALVADOR CITY | Province: MISAMIS ORIENTAL", 0, 1, 'C');
 
+            if ($this->userCount > 1) {
+                $this->Ln(2);
+                $this->SetFont('times','I',10);
+                $this->Cell(0, 0, "** Consolidated from {$this->userCount} BNS users (latest approved report per user) **", 0, 1, 'C');
+            }
+
             $this->Ln(8);
         }
         // On pages 2+, Header is empty — no logos or titles
     }
 
     public function Footer() {
-        date_default_timezone_set('Asia/Manila'); // PH TIME
+        date_default_timezone_set('Asia/Manila');
         $this->SetY(-15);
         $this->SetFont('times','I',10);
-
         $exported = date("F d, Y h:i A");
         $this->Cell(0, 10, "$exported", 0, 0, 'L');
-
         $this->Cell(0, 10, 'Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(), 0, 0, 'R');
     }
 }
 
 // ---------- PDF Init ----------
 $pdf = new MYPDF('P','mm','A4',true,'UTF-8',false);
-$pdf->reportYear = $selectedYear;
-$pdf->barangayName = $barangay_name;
+$pdf->reportYear = $year;
+$pdf->barangayName = $normalized_barangay;
 $pdf->barangayLogo = $barangay_logo;
+$pdf->userCount = $user_count;
 $pdf->SetCreator('Nutrimap');
 $pdf->SetAuthor('BNS');
-$pdf->SetTitle('BNS | Export Barangay Situational Analysis');
+$pdf->SetTitle('BNS | Export Barangay Consolidated Situational Analysis');
 
 // Set top margin for first page (to fit logos)
 $pdf->SetMargins(12, 50, 12);
@@ -208,11 +276,6 @@ $pdf->AddPage();
 $pdf->SetFont('times','B',14);
 $pdf->Ln(6);
 $pdf->SetFont('times','',11);
-
-// After first page, reduce top margin to move content up
-$pdf->setPrintHeader(true);
-$pdf->setPrintFooter(true);
-$pdf->setPageUnit('mm');
 
 $p1 = [
     ['1. Total Population', val($totals,'ind1')],
@@ -240,24 +303,21 @@ $p1[] = [
 $nutri = ['1. Severely Underweight','2. Underweight','3. Normal Weight','4. Severely Wasted','5. Wasted','6. Overweight','7. Obese'];
 for($i=1;$i<=7;$i++){
     $p1[] = [$nutri[$i-1], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
-
 }
 
 $pdf->writeHTML(makeTable($p1), true, false, false, false, '');
 
-
 // ---------- PAGE 2 ----------
-// When adding page 2+, reduce top margin
 $pdf->AddPage();
-$pdf->SetTopMargin(12); // Move content up to use space at top
-$pdf->SetY(12);         // Start writing closer to top
+$pdf->SetTopMargin(12);
+$pdf->SetY(12);
+
 $p2 = [];
 
 // Nutrition indicators
 $nutri = ['8. Severely Stunted','9. Stunted'];
-for($i=1;$i<=2;$i++){
-    $p2[] = [$nutri[$i-1], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
-
+for($i=8;$i<=9;$i++){
+    $p2[] = [$nutri[$i-8], val($totals,"ind9b{$i}_no"), val($totals,"ind9b{$i}_pct",'pct')];
 }
 
 $p2 = array_merge($p2, [
@@ -274,12 +334,12 @@ $p2[] = [
     'Public',
     'Private'
 ];
-$p2[] = ['a. Number of Day Care Centers', val($totals,'ind17a_public'), val($totals,'ind17a_private','no')];
-$p2[] = ['b. Number of Elementary Schools', val($totals,'ind17b_public'), val($totals,'ind17b_private','no')];
+$p2[] = ['a. Number of Day Care Centers', val($totals,'ind17a_public'), val($totals,'ind17a_private')];
+$p2[] = ['b. Number of Elementary Schools', val($totals,'ind17b_public'), val($totals,'ind17b_private')];
 
 $p2[] = ['18. Total Number of Children Enrolled in Kindergarten', val($totals,'ind18'), ''];
 $p2[] = ['19. Total Number of School Children (Grades 1–6)', val($totals,'ind19'), ''];
-$p2[] = ['20. Total Number of School Children Weighed at Start of School Year', val($totals,'ind20'), ''];
+$p2[] = ['20. Actual Number of School Children Weighed at Start of School Year', val($totals,'ind20'), ''];
 $p2[] = ['21. Percentage Coverage of School Children Measured', val($totals,'ind21','pct')];
 
 // School nutrition
@@ -298,16 +358,15 @@ $p2[] = ['24. Households with Severely Wasted School Children', val($totals,'ind
 
 $pdf->writeHTML(makeTable($p2, true), true, false, false, false, '');
 
-
-
-
-
 // ---------- PAGE 3 ----------
 $pdf->AddPage();
+$pdf->SetTopMargin(12);
+$pdf->SetY(12);
+
 $p3 = [];
 $p3[] = ['25. School Children Dewormed at Start of School Year', val($totals,'ind25'), ''];
 $p3[] = ['26. Fully Immunized Children (FIC)', val($totals,'ind26'), ''];
-// Toilet types
+
 $p3[] = [
     '27. Households by type of toilet facility:',
     'No.',
@@ -319,7 +378,6 @@ for($i=0;$i<count($toilet);$i++){
     $p3[] = [$toilet[$i], val($totals,"ind27{$c}_no"), val($totals,"ind27{$c}_pct",'pct')];
 }
 
-// Garbage
 $p3[] = [
     '28. Households by type of garbage disposal:',
     'No.',
@@ -331,7 +389,6 @@ for($i=0;$i<count($garbage);$i++){
     $p3[] = [$garbage[$i], val($totals,"ind28{$c}_no"), val($totals,"ind28{$c}_pct",'pct')];
 }
 
-// Water source
 $p3[] = [
     '29. Households by type of water source:',
     'No.',
@@ -343,18 +400,17 @@ for($i=0;$i<count($water);$i++){
     $p3[] = [$water[$i], val($totals,"ind29{$c}_no"), val($totals,"ind29{$c}_pct",'pct')];
 }
 
-// Home/farming
 $p3[] = [
     '30. Household with:',
     'No.',
     '%'
 ];
-$home = ['a. Vegetable Garden','b. Livestock/Poultry','c. Fishponds','d. Other Specify: No Garden', ];
+$home = ['a. Vegetable Garden','b. Livestock/Poultry','c. Fishponds','d. Other Specify: No Garden'];
 for($i=0;$i<count($home);$i++){
     $c = chr(97 + $i);
     $p3[] = [$home[$i], val($totals,"ind30{$c}_no"), val($totals,"ind30{$c}_pct",'pct')];
 }
-// Dwelling
+
 $p3[] = [
     '31. Households according to type of dwelling unit:',
     'No.',
@@ -365,27 +421,31 @@ for($i=0;$i<count($dwelling);$i++){
     $c = chr(97 + $i);
     $p3[] = [$dwelling[$i], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
 }
+
 $pdf->writeHTML(makeTable($p3, true), true, false, false, false, '');
 
-//Page 4 (if needed)
+// ---------- PAGE 4 ----------
 $pdf->AddPage();
+$pdf->SetTopMargin(12);
+$pdf->SetY(12);
+
 $p4 = [];
 $dwelling = ['b. Semi Concrete','c. Wooden House','d. Nipa Bamboo House','e. Barong-Barong Makeshift','f. Makeshift'];
-for($i=0;$i<count($dwelling);$i++){
+for($i=1;$i<=5;$i++){
     $c = chr(97 + $i);
-    $p4[] = [$dwelling[$i], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
+    $p4[] = [$dwelling[$i-1], val($totals,"ind31{$c}_no"), val($totals,"ind31{$c}_pct",'pct')];
 }
 
-// Number-only indicators
 $p4[] = ['32. Total Number of Households Using Iodized Salt', val($totals,'ind32')];
 $p4[] = ['33. Total Number of Eateries/Carinderia', val($totals,'ind33')];
 $p4[] = ['34. Total Number of Sari-Sari Stores Related to Iodized Salt', val($totals,'ind34')];
 $p4[] = ['35. Total Number of Sari-Sari Stores Related to Cooking Oil', val($totals,'ind35')];
 $p4[] = ['36. Total Number of Bakeries with Fortified Flour', val($totals,'ind36')];
- $p4[] =  ['37. Number of Health and Nutrition Workers:', '', ''];
+$p4[] = ['37. Number of Health and Nutrition Workers:', '', ''];
 $p4[] = ['a. Barangay Nutrition Scholar', val($totals,'ind37a'), ''];
 $p4[] = ['b. Barangay Health Worker', val($totals,'ind37b'), ''];
 $p4[] = ['38. Total Number of Households Beneficiaries of Pantawid Pamilyang Pilipino Program', val($totals,'ind38'), ''];
+
 $pdf->writeHTML(makeTable($p4, true), true, false, false, false, '');
 
 // ---------- Determine output format ----------
@@ -398,13 +458,16 @@ if($format === 'csv') {
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         $output = fopen('php://output', 'w');
 
+        fputcsv($output, ['Barangay ' . $GLOBALS['normalized_barangay'] . ' - Consolidated Situational Analysis']);
+        fputcsv($output, ['Year: ' . $GLOBALS['year']]);
+        fputcsv($output, ['Consolidated from ' . $GLOBALS['user_count'] . ' BNS users (latest approved report per user)']);
+        fputcsv($output, []);
+
         foreach($pages as $page) {
             foreach($page as $row) {
-                // Replace — with empty string for CSV
                 $cleanRow = array_map(function($v){ return $v === '—' ? '' : $v; }, $row);
                 fputcsv($output, $cleanRow);
             }
-            // Add an empty line between pages
             fputcsv($output, []);
         }
 
@@ -414,11 +477,10 @@ if($format === 'csv') {
 
     // Prepare all pages in order
     $allPages = [$p1, $p2, $p3, $p4];
-    exportCSV('Barangay_Situational_Analysis.csv', $allPages);
-
+    exportCSV('Barangay_' . $barangay . '_Consolidated_BSA_' . $year . '.csv', $allPages);
 } else {
-// ---------- PDF Output ----------
-ob_end_clean(); // Clear any buffered output
-$pdf->Output('Barangay_Situational_Analysis.pdf', 'I');
-exit;
+    ob_end_clean();
+    $pdf->Output('Barangay_' . $barangay . '_Consolidated_BSA_' . $year . '.pdf', 'I');
+    exit;
 }
+?>
