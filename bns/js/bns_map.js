@@ -82,7 +82,6 @@ function getCurrentValue(feature) {
 // Highlight gradient cell based on value
 function highlightGradientByValue(value) {
   if (value === null || value === undefined) {
-    // Highlight "No Data" cell
     const noDataCell = document.querySelector('#gradient-grid .gradient-cell:first-child');
     if (noDataCell) {
       document.querySelectorAll('#gradient-grid .gradient-cell').forEach(cell => {
@@ -98,7 +97,6 @@ function highlightGradientByValue(value) {
   const cellIndex = Math.floor(value / stepSize);
   const safeIndex = Math.min(9, Math.max(0, cellIndex));
   
-  // Add +1 because first cell is "No Data"
   const gradientCell = document.querySelector(`#gradient-grid .gradient-cell:nth-child(${safeIndex + 2})`);
   
   if (gradientCell) {
@@ -186,9 +184,15 @@ function initTimelineSlider(minYear, maxYear, availableYears) {
 
   if (!track || !handleLeft || !handleRight || !fill || !yearLabelsContainer) return;
 
-  let currentMin = minYear;
-  let currentMax = maxYear;
+  const latestYear = Math.max(...availableYears);
+  let currentMin = latestYear;
+  let currentMax = latestYear;
   let activeHandle = null;
+  
+  activeYear = latestYear;
+  activeYearFrom = latestYear;
+  activeYearTo = latestYear;
+  isYearRange = false;
 
   yearLabelsContainer.innerHTML = '';
   for (let year = minYear; year <= maxYear; year++) {
@@ -389,9 +393,6 @@ function styleFeature(feature) {
       return { color: '#444', weight: 3, fillOpacity: 0, fillColor: 'transparent', dashArray: '2,2' };
     }
     
-    let step = Math.floor(total / 4);
-    step = Math.min(9, Math.max(0, step));
-    
     return { color: '#000', weight: 2, fillOpacity: 0.8, fillColor: getGradientColor(activeColor, total, 40) };
   } 
   else {
@@ -400,9 +401,6 @@ function styleFeature(feature) {
     if (val === 0 || val == null || props.NO_DATA === true) {
       return { color: '#444', weight: 3, fillOpacity: 0, fillColor: 'transparent', dashArray: '2,2' };
     }
-
-    let step = Math.floor(val / 2);
-    step = Math.min(9, Math.max(0, step));
 
     return { color: '#000', weight: 2, fillOpacity: 0.8, fillColor: getGradientColor(activeColor, val, 20) };
   }
@@ -415,7 +413,6 @@ function featureHandler(feature, layer) {
 
   layer.on({
     mouseover(e) {
-      // HIGHLIGHT THE BARANGAY ON MAP
       layer.setStyle({
         weight: 1,
         color: '#000',
@@ -423,22 +420,12 @@ function featureHandler(feature, layer) {
         opacity: 1
       });
       
-      // HIGHLIGHT THE GRADIENT CELL BASED ON VALUE
       const currentValue = getCurrentValue(feature);
       highlightGradientByValue(currentValue);
       
-      // SHOW TOOLTIP
       if (window.innerWidth < 768) return;
       tooltip.style.display = 'block';
       tooltip.innerHTML = '';
-
-      // const mapRect = document.getElementById('map').getBoundingClientRect();
-      // let left = e.originalEvent.clientX - mapRect.left + 15;
-      // let top = e.originalEvent.clientY - mapRect.top + 15;
-      // if (left + 260 > mapRect.width) left = e.originalEvent.clientX - mapRect.left - 265;
-      // if (top + 200 > mapRect.height) top = e.originalEvent.clientY - mapRect.top - 210;
-      // tooltip.style.left = Math.max(5, left) + 'px';
-      // tooltip.style.top = Math.max(5, top) + 'px';
 
       const title = document.createElement('div');
       title.innerHTML = `<strong>${barangayName}</strong>`;
@@ -477,10 +464,10 @@ function featureHandler(feature, layer) {
         years = [activeYearFrom || new Date().getFullYear()];
       }
 
-const canvas = document.createElement('canvas');
-canvas.width = 260;  // Increased from 220
-canvas.height = 140; // Increased from 100
-tooltip.appendChild(canvas);
+      const canvas = document.createElement('canvas');
+      canvas.width = 260;
+      canvas.height = 140;
+      tooltip.appendChild(canvas);
 
       const datasets = indicators.map(ind => ({
         label: ind.label,
@@ -498,6 +485,9 @@ tooltip.appendChild(canvas);
       }));
 
       if (miniChart) miniChart.destroy();
+      
+      const isLineChartWithAll = (years.length > 1 && activeField === 'all');
+      
       miniChart = new Chart(canvas, {
         type: years.length > 1 ? 'line' : 'bar',
         data: { labels: years, datasets },
@@ -506,9 +496,9 @@ tooltip.appendChild(canvas);
           maintainAspectRatio: true,
           plugins: {
             legend: { display: false },
-            tooltip: { enabled: false },
+            tooltip: { enabled: true },
             datalabels: {
-              display: true,
+              display: isLineChartWithAll ? false : true,
               formatter: (v) => v === 0 || !v ? '' : v.toFixed(1) + '%',
               font: { size: 9, weight: 'bold' },
               backgroundColor: 'rgba(255,255,255,0.8)',
@@ -518,31 +508,26 @@ tooltip.appendChild(canvas);
               offset: 4
             }
           },
-scales: { 
-  y: { 
-    min: 0,
-    max: 20,
-    beginAtZero: true, 
-    ticks: { 
-      stepSize: 4,
-      callback: v => v + '%',
-      autoSkip: false,
-      font: { size: 8 }  // Smaller font
-    } 
-  } 
-}
-     },
+          scales: { 
+            y: { 
+              min: 0,
+              max: 20,
+              beginAtZero: true, 
+              ticks: { 
+                stepSize: 4,
+                callback: v => v + '%',
+                autoSkip: false,
+                font: { size: 8 }
+              } 
+            } 
+          }
+        },
         plugins: [ChartDataLabels]
       });
     },
     mouseout() {
-      // RESET BARANGAY STYLE
       geoLayer.resetStyle(layer);
-      
-      // CLEAR GRADIENT HIGHLIGHT
       clearGradientHighlight();
-      
-      // HIDE TOOLTIP
       tooltip.style.display = 'none';
       if (miniChart) { miniChart.destroy(); miniChart = null; }
     },
@@ -732,29 +717,35 @@ function renderFullChart() {
   const ctx = document.getElementById('fullChart').getContext('2d');
   if (fullChart) fullChart.destroy();
 
-  // For SINGLE YEAR - use BAR CHART (matching mini chart style)
-  if (years.length === 1) {
+   if (years.length === 1) {
     const singleYear = years[0];
-    const labels = indicators.map(ind => ind.label);
-    const dataValues = indicators.map(ind => {
+    const indicatorLabels = [];
+    const indicatorValues = [];
+    const indicatorColors = [];
+    
+    for (let i = 0; i < indicators.length; i++) {
+      const ind = indicators[i];
       const f = filteredFeatures.find(f => parseInt(f.properties.YEAR) === singleYear);
-      return f ? (f.properties[ind.field] || 0) : 0;
-    });
-    const barColors = indicators.map(ind => ind.color);
+      const value = f ? (f.properties[ind.field] || 0) : 0;
+      
+      indicatorLabels.push(ind.label);
+      indicatorValues.push(value);
+      indicatorColors.push(ind.color);
+    }
     
     fullChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: labels,
+        labels: indicatorLabels,
         datasets: [{
           label: `${singleYear}`,
-          data: dataValues,
-          backgroundColor: barColors,
-          borderColor: barColors,
-          borderWidth: 1,
-          borderRadius: 4,
-          barPercentage: 0.7,
-          categoryPercentage: 0.8
+          data: indicatorValues,
+          backgroundColor: 'transparent',
+          borderColor: indicatorColors,
+          borderWidth: 1.5,
+          borderRadius: 2,
+          barPercentage: 0.8,
+          categoryPercentage: 0.9
         }]
       },
       options: {
@@ -762,19 +753,23 @@ function renderFullChart() {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { enabled: false },
+          tooltip: { 
+            callbacks: { 
+              label: (ctx) => `${ctx.label}: ${ctx.raw.toFixed(1)}%` 
+            } 
+          },
           datalabels: {
             display: true,
             formatter: (value) => {
               if (value === 0 || value === null || value === undefined) return '';
               return value.toFixed(1) + '%';
             },
-            font: { size: 11, weight: 'bold' },
-            backgroundColor: 'rgba(255,255,255,0.85)',
-            padding: { left: 4, right: 4, top: 2, bottom: 2 },
-            borderRadius: 3,
+            font: { size: 10, weight: 'bold' },
+            backgroundColor: 'rgba(255,255,255,0.8)',
+            padding: { left: 2, right: 2, top: 1, bottom: 1 },
+            borderRadius: 2,
             align: 'top',
-            offset: 6,
+            offset: 4,
             color: '#1f2937'
           }
         },
@@ -786,14 +781,14 @@ function renderFullChart() {
             ticks: {
               stepSize: 4,
               callback: (val) => val + '%',
-              font: { size: 10 }
+              font: { size: 9 }
             },
             title: { display: false },
             grid: { display: true }
           },
           x: {
             ticks: {
-              font: { size: 11, weight: 'bold' },
+              font: { size: 9, weight: 'bold' },
               maxRotation: 15,
               minRotation: 15
             },
@@ -802,13 +797,13 @@ function renderFullChart() {
           }
         },
         layout: {
-          padding: { top: 20, bottom: 10, left: 10, right: 10 }
+          padding: { top: 15, bottom: 5, left: 5, right: 5 }
         }
       },
       plugins: [ChartDataLabels]
     });
   } 
-  // For MULTIPLE YEARS - use LINE CHART
+  // MULTIPLE YEARS - LINE CHART
   else {
     const datasets = indicators.map(ind => ({
       label: ind.label,
@@ -829,7 +824,10 @@ function renderFullChart() {
 
     fullChart = new Chart(ctx, {
       type: 'line',
-      data: { labels: years, datasets: datasets },
+      data: {
+        labels: years,
+        datasets: datasets
+      },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -841,7 +839,7 @@ function renderFullChart() {
             } 
           },
           datalabels: {
-            display: true,
+            display: activeField === 'all' ? false : true,
             formatter: (value) => {
               if (value === 0 || value === null || value === undefined) return '';
               return value.toFixed(1) + '%';
@@ -878,7 +876,7 @@ if (preschoolBtn && schoolBtn) {
     if (currentPopulation === 'preschool') return;
     currentPopulation = 'preschool';
     preschoolBtn.classList.add('active');
-    schoolBtn.classList.remove('active'); 
+    schoolBtn.classList.remove('active');
     updateLegendListOnly();
     loadData('preschool');
   });
