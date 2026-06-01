@@ -21,11 +21,18 @@ $selectedYear = isset($_GET['year']) && in_array((int)$_GET['year'], $years) ? (
 $activeSection = isset($_GET['section']) && $_GET['section'] === 'barangay' ? 'barangay' : 'consolidated';
 
 // Fetch barangays that have approved reports for selected year
+// MODIFICATION 1: Added NOT EXISTS to exclude CNO-archived reports only
 $barangayStmt = $pdo->prepare("
     SELECT DISTINCT bns.barangay 
     FROM bns_reports bns
     JOIN reports r ON bns.report_id = r.id
     WHERE bns.year = ? AND r.status = 'approved'
+    AND NOT EXISTS (
+        SELECT 1 FROM report_archives ra 
+        WHERE ra.report_id = r.id 
+        AND ra.user_type = 'CNO'
+        AND ra.is_archived = 1
+    )
     ORDER BY bns.barangay ASC
 ");
 $barangayStmt->execute([$selectedYear]);
@@ -38,6 +45,7 @@ $selectedBarangays = isset($_GET['barangays']) && is_array($_GET['barangays']) ?
 $placeholders = !empty($selectedBarangays) ? implode(',', array_fill(0, count($selectedBarangays), '?')) : 'NULL';
 
 // Check if consolidated data exists for selected barangays
+// MODIFICATION 2: Added NOT EXISTS to exclude CNO-archived reports only
 $checkConsolidatedSql = "
     SELECT COUNT(*) as count
     FROM (
@@ -46,6 +54,12 @@ $checkConsolidatedSql = "
         JOIN bns_reports b ON r.id = b.report_id
         WHERE b.year = ? 
         AND r.status = 'approved'
+        AND NOT EXISTS (
+            SELECT 1 FROM report_archives ra 
+            WHERE ra.report_id = r.id 
+            AND ra.user_type = 'CNO'
+            AND ra.is_archived = 1
+        )
     ";
 if (!empty($selectedBarangays)) {
     $checkConsolidatedSql .= " AND b.barangay IN ($placeholders)";
@@ -62,6 +76,7 @@ if (!empty($selectedBarangays)) {
 $hasConsolidated = $checkStmt->fetch(PDO::FETCH_ASSOC)['count'] > 0;
 
 // Barangay reports (latest per user per barangay for selected year)
+// MODIFICATION 3: Added NOT EXISTS to both outer and subquery to exclude CNO-archived reports only
 $barangayReports = [];
 foreach ($barangayOptions as $barangay) {
     $stmt = $pdo->prepare("
@@ -71,6 +86,12 @@ foreach ($barangayOptions as $barangay) {
         WHERE b.year = ?
         AND b.barangay = ?
         AND r.status = 'approved'
+        AND NOT EXISTS (
+            SELECT 1 FROM report_archives ra 
+            WHERE ra.report_id = r.id 
+            AND ra.user_type = 'CNO'
+            AND ra.is_archived = 1
+        )
         AND r.id = (
             SELECT r2.id
             FROM reports r2
@@ -79,6 +100,12 @@ foreach ($barangayOptions as $barangay) {
             AND b2.barangay = ?
             AND r2.user_id = r.user_id
             AND r2.status = 'approved'
+            AND NOT EXISTS (
+                SELECT 1 FROM report_archives ra2 
+                WHERE ra2.report_id = r2.id 
+                AND ra2.user_type = 'CNO'
+                AND ra2.is_archived = 1
+            )
             ORDER BY r2.report_date DESC
             LIMIT 1
         )

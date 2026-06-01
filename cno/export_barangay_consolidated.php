@@ -82,6 +82,12 @@ WITH latest_per_user AS (
     WHERE r.status = 'approved'
         AND bns.year = ?
         AND bns.barangay = ?
+        AND NOT EXISTS (
+            SELECT 1 FROM report_archives ra 
+            WHERE ra.report_id = r.id 
+            AND ra.user_type = 'CNO'
+            AND ra.is_archived = 1
+        )
 ),
 aggregated AS (
     SELECT 

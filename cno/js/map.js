@@ -605,9 +605,9 @@ return {
             pointBorderColor: '#fff',
             pointBorderWidth: 1,
 datalabels: {
-  display: true,
+  display: (activeField === 'ALL') ? false : true,
   formatter: function(value, context) {
-    // Get the hasData flag for this data point
+    if (activeField === 'ALL') return '';
     const hasData = context.dataset.hasDataFlags?.[context.dataIndex];
     
     // No data exists for this year
@@ -779,7 +779,7 @@ datalabels: {
 }
 
 // ===================== LOAD INITIAL DATA =====================
-fetch('../cno/get_map_data.php')
+fetch('../landing_page/get_map_data.php')
   .then(r => r.json())
   .then(data => {
     geoData = data;
@@ -1130,10 +1130,11 @@ function renderFullChart() {
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         fill: false,
-        datalabels: isAllSelected ? { display: false } : {
-          display: true,
-          formatter: function(value, context) {
-            const hasData = context.dataset.hasDataFlags?.[context.dataIndex];
+datalabels: {
+  display: isAllSelected ? false : true,
+formatter: function(value, context) {
+  if (isAllSelected) return '';
+  const hasData = context.dataset.hasDataFlags?.[context.dataIndex];
             
             // No data exists - show ND
             if (hasData === false) return 'ND';
@@ -1250,10 +1251,11 @@ function renderFullChart() {
       pointBorderColor: '#fff',
       pointBorderWidth: 2,
       fill: false,
-      datalabels: isAllSelected ? { display: false } : {
-        display: true,
-        formatter: function(value, context) {
-          const hasData = context.dataset.hasDataFlags?.[context.dataIndex];
+datalabels: isAllSelected ? { display: false } : {
+  display: true,
+formatter: function(value, context) {
+  if (isAllSelected) return '';
+  const hasData = context.dataset.hasDataFlags?.[context.dataIndex];
           
           // No data exists - show ND
           if (hasData === false) return 'ND';
@@ -1620,7 +1622,7 @@ const preschoolBtn = document.getElementById('preschoolBtn');
 const schoolBtn = document.getElementById('schoolBtn');
 
 function loadPreschoolData() {
-    fetch('../cno/get_map_data.php')
+    fetch('../landing_page/get_map_data.php')
         .then(r => r.json())
         .then(data => {
             geoData = data;
@@ -1648,7 +1650,7 @@ function loadPreschoolData() {
 }
 
 function loadSchoolData() {
-    fetch('../cno/get_school_data.php')
+    fetch('../landing_page/get_school_data.php')
         .then(r => r.json())
         .then(data => {
             geoData = data;

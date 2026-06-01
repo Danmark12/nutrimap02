@@ -57,6 +57,7 @@ if (!empty($_GET['barangays'])) {
 }
 
 /* SQL: Get latest approved report per user, then aggregate */
+/* MODIFICATION: Added NOT EXISTS to exclude CNO-archived reports only */
 $sql = "
 WITH latest_per_user AS (
     SELECT 
@@ -70,6 +71,13 @@ WITH latest_per_user AS (
     WHERE r.status = 'approved'
         AND bns.year = ?
         $barangayFilter
+        -- Only exclude reports archived by CNO (BNS archives are ignored)
+        AND NOT EXISTS (
+            SELECT 1 FROM report_archives ra 
+            WHERE ra.report_id = r.id 
+            AND ra.user_type = 'CNO'
+            AND ra.is_archived = 1
+        )
 ),
 aggregated AS (
     SELECT 
@@ -266,7 +274,7 @@ table td:nth-child(2) {
         <img src="../logos/fixed/Bagong-Pilipinas-logo.png">
       </td>
     </tr>
-   </table>
+  </table>
 
   <div class="report-info">
       <h3>CONSOLIDATED BARANGAY SITUATIONAL ANALYSIS (BSA)</h3>

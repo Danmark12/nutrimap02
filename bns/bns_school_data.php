@@ -59,11 +59,15 @@ $sql = "SELECT
             r.created_at
         FROM bns_reports br
         JOIN reports r ON br.report_id = r.id
-        LEFT JOIN report_archives ra ON r.id = ra.report_id AND ra.user_type = 'BNS'
         WHERE 
             r.status = 'approved'
             AND UPPER(br.barangay) = UPPER(?)
-            AND (ra.is_deleted IS NULL OR ra.is_deleted = 0)
+            AND NOT EXISTS (
+                SELECT 1 FROM report_archives ra
+                WHERE ra.report_id = r.id
+                  AND ra.user_type = 'CNO'
+                  AND (ra.is_archived = 1 OR ra.is_deleted = 1)
+            )
         ORDER BY r.created_at DESC";
 
 $stmt = $pdo->prepare($sql);

@@ -24,11 +24,25 @@ $userName = $userInfo ? htmlspecialchars($userInfo['first_name']) : 'User';
 $yearsStmt = $pdo->query("SELECT DISTINCT CAST(`year` AS UNSIGNED) AS yr FROM bns_reports ORDER BY yr DESC");
 $yearOptions = $yearsStmt->fetchAll(PDO::FETCH_COLUMN, 0);
 
-$selectedYear = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+// Get current year
+$currentYear = (int)date('Y');
+
+// Set selected year: from URL, or current year if available in options, otherwise latest year
+if (isset($_GET['year'])) {
+    $selectedYear = (int)$_GET['year'];
+} else {
+    // Default to current year if it exists in options, otherwise use the latest year
+    if (in_array($currentYear, $yearOptions)) {
+        $selectedYear = $currentYear;
+    } else {
+        $selectedYear = !empty($yearOptions) ? max($yearOptions) : $currentYear;
+    }
+}
 
 $excludeArchivedCondition = "NOT EXISTS (
     SELECT 1 FROM report_archives a
     WHERE a.report_id = r.id
+      AND a.user_type = 'CNO'
       AND (a.is_archived = 1 OR a.is_deleted = 1)
 )";
 
@@ -503,13 +517,25 @@ if ($currentHour < 12) {
                         
                         <!-- Year Selector -->
                         <form method="get">
-                            <select name="year" onchange="this.form.submit()" class="year-select-header">
-                                <?php foreach ($yearOptions as $y): ?>
-                                    <option value="<?= htmlspecialchars($y) ?>" <?= ((int)$y === $selectedYear) ? 'selected' : '' ?>>
-                                        📅 <?= htmlspecialchars($y) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+<select name="year" onchange="this.form.submit()" class="year-select-header">
+    <?php 
+    // Sort years descending and ensure current year is included
+    $sortedYears = $yearOptions;
+    rsort($sortedYears);
+    
+    // If current year is not in options, add it
+    if (!in_array($currentYear, $sortedYears)) {
+        $sortedYears[] = $currentYear;
+        rsort($sortedYears);
+    }
+    
+    foreach ($sortedYears as $y): 
+    ?>
+        <option value="<?= htmlspecialchars($y) ?>" <?= ((int)$y === $selectedYear) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($y) ?>
+        </option>
+    <?php endforeach; ?>
+</select>
                         </form>
                     </div>
                 </div>

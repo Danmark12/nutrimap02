@@ -58,6 +58,7 @@ function getBarangayLogo($barangay) {
 }
 
 // SQL: Get latest approved report per user for this barangay, then aggregate
+/* MODIFICATION: Added NOT EXISTS to exclude CNO-archived reports only */
 $sql = "
 WITH latest_per_user AS (
     SELECT 
@@ -71,6 +72,13 @@ WITH latest_per_user AS (
     WHERE r.status = 'approved'
         AND bns.year = ?
         AND bns.barangay = ?
+        -- Only exclude reports archived by CNO (BNS archives are ignored)
+        AND NOT EXISTS (
+            SELECT 1 FROM report_archives ra 
+            WHERE ra.report_id = r.id 
+            AND ra.user_type = 'CNO'
+            AND ra.is_archived = 1
+        )
 ),
 aggregated AS (
     SELECT 
@@ -285,7 +293,16 @@ table th:nth-child(2) {
 <?php else: ?>
 
 <?php if ($user_count > 1): ?>
-
+<div class="info-banner" style="background: #e8f5e9; border-left-color: #4caf50; margin-bottom: 15px;">
+    <i class="fas fa-users"></i> 
+    <strong><?= $user_count ?> BNS Users</strong> contributed to this consolidated report
+    <br><small>Data consolidated from the latest approved report of each Barangay Nutrition Scholar</small>
+</div>
+<?php elseif ($user_count == 1): ?>
+<div class="info-banner" style="background: #e3f2fd; border-left-color: #2196f3; margin-bottom: 15px;">
+    <i class="fas fa-user-check"></i> 
+    Data from 1 BNS User (latest approved report)
+</div>
 <?php endif; ?>
 
 <div class="document">
@@ -293,7 +310,7 @@ table th:nth-child(2) {
 <tr>
 <td class="header-left">BNS Form No. IC<br>Barangay Nutrition Profile</td>
 <td class="header-logos">
-<img src="../logos/barangays/<?= htmlspecialchars($barangay_logo) ?>" alt="Barangay Logo">
+<img src="../logos/barangays/<?= htmlspecialchars($barangay_logo) ?>" alt="Barangay Logo" onerror="this.src='../logos/barangays/default.png'">
 <img src="../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.png" alt="City Logo">
 <img src="../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.png" alt="NNC Logo">
 <img src="../logos/fixed/Bagong-Pilipinas-logo.png" alt="Bagong Pilipinas Logo">

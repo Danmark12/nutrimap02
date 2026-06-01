@@ -228,7 +228,7 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="menu-container" onclick="event.stopPropagation();">
               <button class="menu-btn"><i class="fa fa-ellipsis-v"></i></button>
               <div class="menu-content">
-                <a href="view_report.php?id=<?= $r['id'] ?>" target="_blank"><i class="fa fa-eye"></i> View</a>
+<a href="view_report.php?id=<?= $r['id'] ?>"><i class="fa fa-eye"></i> View</a>
                 <a href="archive/restore_report.php?id=<?= $r['id'] ?>" onclick="return confirm('Restore this report?')"><i class="fa fa-undo"></i> Restore</a>
                 <a href="archive/delete_report.php?id=<?= $r['id'] ?>" onclick="return confirm('Delete this report?')"><i class="fa fa-trash"></i> Delete Permanently</a>
               </div>

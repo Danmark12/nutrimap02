@@ -28,8 +28,9 @@ $allYearsStmt = $pdo->prepare("
 $allYearsStmt->execute([$userId]);
 $allAvailableYears = $allYearsStmt->fetchAll(PDO::FETCH_COLUMN);
 
-// Get selected global year from URL, default to latest year
-$selectedGlobalYear = isset($_GET['global_year']) && $_GET['global_year'] !== '' ? (int)$_GET['global_year'] : ($allAvailableYears[0] ?? null);
+// Get selected global year from URL, default to CURRENT YEAR
+$currentYear = (int)date('Y');
+$selectedGlobalYear = isset($_GET['global_year']) && $_GET['global_year'] !== '' ? (int)$_GET['global_year'] : (in_array($currentYear, $allAvailableYears) ? $currentYear : ($allAvailableYears[0] ?? null));
 
 // Total reports (filtered by year)
 if ($selectedGlobalYear) {
@@ -41,32 +42,32 @@ if ($selectedGlobalYear) {
 }
 $totalReports = $totalStmt->fetchColumn();
 
-// Approved reports (filtered by year)
+// Approved reports (filtered by year) - ONLY check BNS archive
 if ($selectedGlobalYear) {
-    $approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1) AND b.year = ?");
+    $approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1) AND b.year = ?");
     $approvedStmt->execute([$userId, $selectedGlobalYear]);
 } else {
-    $approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
+    $approvedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Approved' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)");
     $approvedStmt->execute([$userId]);
 }
 $approvedReports = $approvedStmt->fetchColumn();
 
-// Pending reports (filtered by year)
+// Pending reports (filtered by year) - ONLY check BNS archive
 if ($selectedGlobalYear) {
-    $pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1) AND b.year = ?");
+    $pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1) AND b.year = ?");
     $pendingStmt->execute([$userId, $selectedGlobalYear]);
 } else {
-    $pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
+    $pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Pending' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)");
     $pendingStmt->execute([$userId]);
 }
 $pendingReports = $pendingStmt->fetchColumn();
 
-// Rejected reports (filtered by year)
+// Rejected reports (filtered by year) - ONLY check BNS archive
 if ($selectedGlobalYear) {
-    $rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1) AND b.year = ?");
+    $rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1) AND b.year = ?");
     $rejectedStmt->execute([$userId, $selectedGlobalYear]);
 } else {
-    $rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.is_archived = 1)");
+    $rejectedStmt = $pdo->prepare("SELECT COUNT(*) FROM reports r JOIN bns_reports b ON r.id = b.report_id WHERE r.user_id = ? AND r.status = 'Rejected' AND r.is_submitted = 1 AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)");
     $rejectedStmt->execute([$userId]);
 }
 $rejectedReports = $rejectedStmt->fetchColumn();
@@ -81,7 +82,7 @@ if ($selectedGlobalYear) {
 }
 $latestReport = $latestStmt->fetch(PDO::FETCH_ASSOC);
 
-// Get all approved reports for this BNS user, filtered by global year
+// Get all approved reports for this BNS user, filtered by global year (NO archive filter - show all approved)
 if ($selectedGlobalYear) {
     $reportsStmt = $pdo->prepare("
         SELECT r.id, r.report_date, r.status, b.year, b.title
@@ -115,24 +116,26 @@ foreach ($availableReports as $rep) {
     }
 }
 
-// Fetch nutrition snapshot for selected report ID
+// Fetch nutrition snapshot for selected report ID - ONLY check BNS archive
 $nutriStmt = $pdo->prepare("
     SELECT b.*
     FROM bns_reports b
     JOIN reports r ON b.report_id = r.id
     WHERE r.user_id = ? AND r.status = 'Approved' AND r.id = ?
+      AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)
     LIMIT 1
 ");
 $nutriStmt->execute([$userId, $selectedReportId]);
 $n = $nutriStmt->fetch(PDO::FETCH_ASSOC);
 
-// Recent activity - only approved reports filtered by year
+// Recent activity - only approved reports filtered by year - ONLY check BNS archive
 if ($selectedGlobalYear) {
     $activityStmt = $pdo->prepare("
         SELECT r.id, r.status, r.report_date, r.report_time, b.title, r.is_submitted 
         FROM reports r 
         JOIN bns_reports b ON r.id = b.report_id 
         WHERE r.user_id = ? AND r.status = 'Approved' AND b.year = ?
+          AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)
         ORDER BY r.report_date DESC, r.report_time DESC LIMIT 5
     ");
     $activityStmt->execute([$userId, $selectedGlobalYear]);
@@ -142,13 +145,14 @@ if ($selectedGlobalYear) {
         FROM reports r 
         JOIN bns_reports b ON r.id = b.report_id 
         WHERE r.user_id = ? AND r.status = 'Approved'
+          AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)
         ORDER BY r.report_date DESC, r.report_time DESC LIMIT 5
     ");
     $activityStmt->execute([$userId]);
 }
 $recentActivity = $activityStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Paginated pending/rejected table (filtered by year)
+// Paginated pending/rejected table (filtered by year) - ONLY check BNS archive
 $limit  = 8;
 $page   = isset($_GET['page']) ? max(1,(int)$_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
@@ -158,6 +162,7 @@ if ($selectedGlobalYear) {
         SELECT COUNT(*) FROM reports r 
         JOIN bns_reports b ON r.id = b.report_id 
         WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1 AND b.year = ?
+          AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)
     ");
     $totalRowsStmt->execute([$userId, $selectedGlobalYear]);
 } else {
@@ -165,6 +170,7 @@ if ($selectedGlobalYear) {
         SELECT COUNT(*) FROM reports r 
         JOIN bns_reports b ON r.id = b.report_id 
         WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1
+          AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND a.is_archived = 1)
     ");
     $totalRowsStmt->execute([$userId]);
 }
@@ -177,8 +183,8 @@ if ($selectedGlobalYear) {
         FROM reports r 
         JOIN users u ON r.user_id = u.id 
         JOIN bns_reports b ON r.id = b.report_id 
-        LEFT JOIN report_archives a ON r.id = a.report_id AND (a.is_deleted=0 OR a.is_deleted IS NULL) AND (a.is_archived=0 OR a.is_archived IS NULL) 
         WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1 AND b.year = ?
+          AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND (a.is_deleted = 1 OR a.is_archived = 1))
         ORDER BY r.report_date DESC, r.report_time DESC 
         LIMIT ? OFFSET ?
     ");
@@ -189,8 +195,8 @@ if ($selectedGlobalYear) {
         FROM reports r 
         JOIN users u ON r.user_id = u.id 
         JOIN bns_reports b ON r.id = b.report_id 
-        LEFT JOIN report_archives a ON r.id = a.report_id AND (a.is_deleted=0 OR a.is_deleted IS NULL) AND (a.is_archived=0 OR a.is_archived IS NULL) 
         WHERE r.user_id = ? AND (r.status='Pending' OR r.status='Rejected') AND r.is_submitted=1
+          AND NOT EXISTS (SELECT 1 FROM report_archives a WHERE a.report_id = r.id AND a.user_type = 'BNS' AND (a.is_deleted = 1 OR a.is_archived = 1))
         ORDER BY r.report_date DESC, r.report_time DESC 
         LIMIT ? OFFSET ?
     ");
@@ -691,7 +697,7 @@ body{background:var(--surface);color:var(--text);}
   <!-- Reports table -->
   <div class="card fu fu5">
     <div class="card-header"><span class="card-title"><i class="fa fa-table"></i>Pending &amp; Rejected Reports</span><div><div class="search-wrap"><i class="fa fa-search"></i><input id="tableSearch" type="text" placeholder="Search…" class="search-inp"></div></div></div>
-    <div style="overflow-x:auto;"><table id="reportsTable" class="dt w-full"><thead><th>User</th><th>Report Title</th><th>Status</th><th>Date</th><th>Time</th><th>Action</th></thead><tbody><?php if($myReports): foreach($myReports as $r): $pic=(!empty($r['profile_pic'])&&file_exists("../uploads/".$r['profile_pic']))?"../uploads/".htmlspecialchars($r['profile_pic']):"../uploads/default.png";?><tr><td><div style="display:flex;align-items:center;gap:8px;"><img src="<?=$pic?>" style="width:28px;height:28px;border-radius:50%;object-fit:cover;"><span><?=htmlspecialchars($r['username'])?></span></div></td><td><?=htmlspecialchars($r['title'])?></td><td><span class="badge b-<?=strtolower($r['status'])?>"><?=$r['status']?></span></td><td><?=htmlspecialchars($r['report_date'])?></td><td><?=htmlspecialchars(substr($r['report_time'],0,5))?></td><td><a href="view_report.php?id=<?=$r['id']?>" class="btn-view"><i class="fa fa-eye"></i> View</a></td></tr><?php endforeach; else: ?><tr><td colspan="6" style="text-align:center;padding:2rem;"><i class="fa fa-check-circle" style="font-size:28px;color:#86efac;"></i><p>No pending or rejected reports for <?= $selectedGlobalYear ?>.</p><a href="add_report.php" style="color:var(--teal-500);">+ Submit a new report →</a></td></tr><?php endif; ?></tbody></table></div>
+    <div style="overflow-x:auto;"><table id="reportsTable" class="dt w-full"><thead><tr><th>User</th><th>Report Title</th><th>Status</th><th>Date</th><th>Time</th><th>Action</th></tr></thead><tbody><?php if($myReports): foreach($myReports as $r): $pic=(!empty($r['profile_pic'])&&file_exists("../uploads/".$r['profile_pic']))?"../uploads/".htmlspecialchars($r['profile_pic']):"../uploads/default.png";?><tr><td><div style="display:flex;align-items:center;gap:8px;"><img src="<?=$pic?>" style="width:28px;height:28px;border-radius:50%;object-fit:cover;"><span><?=htmlspecialchars($r['username'])?></span></div></td><td><?=htmlspecialchars($r['title'])?></td><td><span class="badge b-<?=strtolower($r['status'])?>"><?=$r['status']?></span></td><td><?=htmlspecialchars($r['report_date'])?></td><td><?=htmlspecialchars(substr($r['report_time'],0,5))?></td><td><a href="view_report.php?id=<?=$r['id']?>" class="btn-view"><i class="fa fa-eye"></i> View</a></td></tr><?php endforeach; else: ?><tr><td colspan="6" style="text-align:center;padding:2rem;"><i class="fa fa-check-circle" style="font-size:28px;color:#86efac;"></i><p>No pending or rejected reports for <?= $selectedGlobalYear ?>.</p><a href="add_report.php" style="color:var(--teal-500);">+ Submit a new report →</a></td></tr><?php endif; ?></tbody></table></div>
     <?php if($totalPages>1): ?><div style="display:flex;justify-content:center;gap:5px;padding:12px;"><?php for($i=1;$i<=$totalPages;$i++):?><a href="?page=<?=$i?><?= $selectedGlobalYear ? '&global_year='.$selectedGlobalYear : '' ?>&report_id=<?=$selectedReportId?>" class="pg-btn <?=$i==$page?'active':''?>"><?=$i?></a><?php endfor;?></div><?php endif; ?>
   </div>
 
