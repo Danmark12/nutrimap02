@@ -10,8 +10,23 @@ const map = L.map('map', {
   touchZoom: false
 });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Define layers
+const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: 'Map data © OpenStreetMap contributors'
+});
+
+const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 18,
+  attribution: 'Tiles © Esri'
+});
+
+// Add default layer (street view)
+streetLayer.addTo(map);
+
+// Add layer control toggle button
+L.control.layers({
+  "Street Map": streetLayer,
+  "Satellite": satelliteLayer
 }).addTo(map);
 
 // ===================== VARIABLES =====================

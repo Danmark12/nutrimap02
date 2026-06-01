@@ -10,9 +10,33 @@ const map = L.map('map', {
   touchZoom: true
 });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Define layers
+const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: 'Map data © OpenStreetMap contributors'
+});
+
+const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 18,
+  attribution: 'Tiles © Esri'
+});
+
+// Add default layer (street view)
+streetLayer.addTo(map);
+// Add layer control button (disabled - no functionality)
+var layerControl = L.control.layers({
+  "Street Map": streetLayer,
+  "Satellite": satelliteLayer
 }).addTo(map);
+
+// Remove the click/hover functionality
+setTimeout(() => {
+    const toggle = document.querySelector('.leaflet-control-layers-toggle');
+    if (toggle) {
+        toggle.style.pointerEvents = 'none';
+        toggle.style.cursor = 'default';
+        toggle.style.opacity = '0.6';
+    }
+}, 100);
 
 // ===================== VARIABLES =====================
 let geoLayer, geoData;  
