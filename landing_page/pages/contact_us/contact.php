@@ -100,8 +100,8 @@
       $message = trim($_POST['message']);
 
       if (!empty($name) && !empty($email) && !empty($message)) {
-          $to = "louizkylaspona@gmail.com";
-          $subject = "New Message from Guest User - $name";
+          $to = "danmarkpetalcurin@gmail.com";
+          $subject = "New Message from visitor - $name";
 
           $body = "
               <h3>Message from the guest user of CNO NutriMap</h3>

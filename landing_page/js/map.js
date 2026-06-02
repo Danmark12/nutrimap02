@@ -10,29 +10,34 @@ const map = L.map('map', {
   touchZoom: true
 });
 
-// Create direct toggle button (no checkbox)
-const toggleBtn = L.control({ position: 'topright' });
+// Define layers
+const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: 'Map data © OpenStreetMap contributors'
+});
 
-toggleBtn.onAdd = function() {
-    const div = L.DomUtil.create('div');
-    div.innerHTML = '<div id="mapToggle" style="background:white; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.3); width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><circle cx="12" cy="10" r="2"></circle><path d="M2 10h4"></path><path d="M18 10h4"></path></svg></div>';
-    return div;
-};
+const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 18,
+  attribution: 'Tiles © Esri'
+});
 
-toggleBtn.addTo(map);
+// Add default layer (street view)
+streetLayer.addTo(map);
+// Add layer control button (disabled - no functionality)
+var layerControl = L.control.layers({
+  "Street Map": streetLayer,
+  "Satellite": satelliteLayer
+}).addTo(map);
 
-let isStreet = true;
-document.getElementById('mapToggle').onclick = function() {
-    if (isStreet) {
-        map.removeLayer(streetLayer);
-        satelliteLayer.addTo(map);
-        isStreet = false;
-    } else {
-        map.removeLayer(satelliteLayer);
-        streetLayer.addTo(map);
-        isStreet = true;
+// Remove the click/hover functionality
+setTimeout(() => {
+    const toggle = document.querySelector('.leaflet-control-layers-toggle');
+    if (toggle) {
+        toggle.style.pointerEvents = 'none';
+        toggle.style.cursor = 'default';
+        toggle.style.opacity = '0.6';
     }
-};
+}, 100);
+
 // ===================== VARIABLES =====================
 let geoLayer, geoData;  
 let activeField = null, activeColor = null, activeLabel = null;

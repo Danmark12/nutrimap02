@@ -33,23 +33,21 @@ function getBarangayLogo($barangay) {
     return $logos[$barangay] ?? 'default.png';
 }
 
-$barangay = $_SESSION['barangay']; // auto-fill from session
-$year = date('Y'); // default year
+$barangay = $_SESSION['barangay'];
+$year = date('Y');
 $user_id = $_SESSION['user_id'];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $title = trim($_POST['title']); // report title from form
-    $year = $_POST['year'] ?? $year; // optional year from form
+    $title = trim($_POST['title']);
+    $year = $_POST['year'] ?? $year;
     $barangay = $_POST['barangay'] ?? $barangay;
 
     if ($title === '') {
         die("Error: Title cannot be empty!");
     }
     try {
-        // Start transaction to ensure both inserts succeed
         $pdo->beginTransaction();
 
-        // 1️⃣ Insert into reports table
         $stmt = $pdo->prepare("
             INSERT INTO reports (user_id, report_time, report_date, is_submitted)
             VALUES (:user_id, :report_time, :report_date, 1)
@@ -59,10 +57,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ':report_time' => date('H:i:s'),
             ':report_date' => date('Y-m-d')
         ]);
-        // Get the inserted report ID
         $report_id = $pdo->lastInsertId();
 
-        // 2️⃣ Prepare data for bns_reports
         $fields = [
             'report_id', 'barangay', 'year', 'title',          
             'ind1', 'ind_male', 'ind_female',
@@ -103,8 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         foreach ($fields as $f) {
             $placeholders[] = ':' . $f;
-
-            // report_id is from $report_id, others from POST
             if ($f === 'report_id') {
                 $params[':' . $f] = $report_id;
             } elseif ($f === 'barangay') {
@@ -118,13 +112,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         }
 
-        // Prepare and execute insert
         $sql = "INSERT INTO bns_reports (" . implode(',', $fields) . ") 
                 VALUES (" . implode(',', $placeholders) . ")";
         $stmt2 = $pdo->prepare($sql);
         $stmt2->execute($params);
 
-        // 3️⃣ Log activity
         $logStmt = $pdo->prepare("
             INSERT INTO activity_logs (user_id, action, details, created_at)
             VALUES (:user_id, :action, :details, NOW())
@@ -135,12 +127,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ':details' => "Report ID: $report_id, Created for Barangay: $barangay, Year: $year, Title: '$title'"
         ]);
 
-        // NOTIFICATION
         $cnoStmt = $pdo->query("SELECT id FROM users WHERE user_type = 'CNO'");
         $cnoUsers = $cnoStmt->fetchAll(PDO::FETCH_COLUMN);
 
         $notifMessage = "A new report has been submitted by {$barangay}.";
-
         $notifStmt = $pdo->prepare("
             INSERT INTO notifications (user_id, sender_id, message, date)
             VALUES (:user_id, :sender_id, :message, NOW())
@@ -153,10 +143,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ':message' => $notifMessage
             ]);
         }
-        // Commit transaction
         $pdo->commit();
 
-        // ✅ Redirect with success message
         $_SESSION['success'] = "Report and barangay data submitted successfully.";
         header("Location: home.php");
         exit();
@@ -198,18 +186,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <form method="post">
                         <input type="hidden" id="hidden-title" name="title">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <!-- Left: Titles -->
                             <div style="text-align:left;">
                                 <h2 style="margin:0; font-size:15px;">BNS Form No. IC</h2>
                                 <h3 style="margin:0; font-size:15px;">Barangay Nutrition Profile</h3>
                             </div>
-                            <!-- Right: Logos -->
                             <div style="display:flex; align-items:center; gap:15px;">
-                                <!-- Dynamic Barangay Logo -->
                                 <img src="../logos/barangays/<?= getBarangayLogo($barangay) ?>" 
                                      alt="<?= htmlspecialchars($barangay) ?> Logo" 
                                      style="height:100px;">
-                                <!-- Fixed Logos -->
                                 <img src="../logos/fixed/Seal_of_El_Salvador__Misamis_Oriental-removebg-preview.png" alt="Logo 1" style="height:100px;">
                                 <img src="../logos/fixed/National_Nutrition_Council__NNC_.svg-removebg-preview.png" alt="Logo 2" style="height:100px;">
                                 <img src="../logos/fixed/Bagong-Pilipinas-logo.png" alt="Logo 3" style="height:100px;">
@@ -225,24 +209,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <strong>City/Municipality:</strong> EL SALVADOR CITY &nbsp;&nbsp;
                             <strong>Province:</strong> MISAMIS ORIENTAL
                         </div>
-                        <!-- Full Indicators Form -->
                         <div class="form-section">
-                            <table>
+                            <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">
                                 <tr><th>Indicator</th><th>Number</th></tr>
-                                <tr><td>1. Total Population</td><td><input type="number" id="total" name="ind1" required min="0"></td></tr>
-                                <tr><td class="indent">Male</td><td><input type="number" id="male" name="ind_male" required min="0"></td></tr>
-                                <tr><td class="indent">Female</td><td><input type="number" id="female" name="ind_female" required min="0"></td></tr>
-                                <tr><td>2. Total Number of Households</td><td><input type="number" name="ind2" required></td></tr>
-                                <tr><td>3. Total Number of Family</td><td><input type="number" name="ind3" required></td></tr>
-                                <tr><td>4. Total Number of HHs More Than 5 Below Members</td><td><input type="number" name="ind4" required></td></tr>
-                                <tr><td>5. Total Number of HHs more Than 5 Above Members</td><td><input type="number" name="ind5" required></td></tr>
+                                <tr><td>1. Total Population</td><td><input type="number" id="total" name="ind1" min="0"></td></tr>
+                                <tr><td class="indent">Male</td><td><input type="number" id="male" name="ind_male" min="0"></td></tr>
+                                <tr><td class="indent">Female</td><td><input type="number" id="female" name="ind_female" min="0"></td></tr>
+                                <tr><td>2. Total Number of Households</td><td><input type="number" name="ind2"></td></tr>
+                                <tr><td>3. Total Number of Family</td><td><input type="number" name="ind3"></td></tr>
+                                <tr><td>4. Total Number of HHs More Than 5 Below Members</td><td><input type="number" name="ind4"></td></tr>
+                                <tr><td>5. Total Number of HHs more Than 5 Above Members</td><td><input type="number" name="ind5"></td></tr>
                                 <tr><td>6. Total Number of Women Who Are:</td><td></td></tr>
-                                <tr><td class="indent">a. Pregnant</td><td><input type="number" name="ind6a" required></td></tr>
-                                <tr><td class="indent">b. Lactating</td><td><input type="number" name="ind6b" required></td></tr>
-                                <tr><td>7. Total Number of Households With Preschool Children 0-59 Months</td><td><input type="number" name="ind7" required></td></tr>
-                                <tr><td>8. Estimate Population of Preschool Children 0-59 Months</td><td><input type="number" name="ind8" required></td></tr>
-                                <tr><td>9. Actual Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td><td><input type="number" name="ind9" required></td></tr>
-                                <tr><td>a. Percent (%) Measured Coverage (OPT Plus)</td><td><input type="number" step="0.01" name="ind9a" required></td></tr>
+                                <tr><td class="indent">a. Pregnant</td><td><input type="number" name="ind6a"></td></tr>
+                                <tr><td class="indent">b. Lactating</td><td><input type="number" name="ind6b"></td></tr>
+                                <tr><td>7. Total Number of Households With Preschool Children 0-59 Months</td><td><input type="number" name="ind7"></td></tr>
+                                <tr><td>8. Estimate Population of Preschool Children 0-59 Months</td><td><input type="number" name="ind8"></td></tr>
+                                <tr><td>9. Actual Number of Preschool Children 0-50 Months Old Measured During OPT Plus</td><td><input type="number" name="ind9"></td></tr>
+                                <tr><td>a. Percent (%) Measured Coverage (OPT Plus)</td><td><input type="number" step="0.01" name="ind9a"></td></tr>
                                 <tr>
                                     <td>b. Number and Percent (%) of Preschool Children According to Nutritional Status</td>
                                     <td style="display:flex; gap:10px; font-weight:bold;">
@@ -267,19 +250,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind9b{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind9b{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind9b{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind9b{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
                                 ?>
-                                <tr><td>10. Total Number of Infants 0-5 Months Old</td><td><input type="number" name="ind10" required></td></tr>
-                                <tr><td>11. Total Number of Infants 6-11 Months Old</td><td><input type="number" name="ind11" required></td></tr>
-                                <tr><td>12. Total Number of Preschool Children 0-23 Months Old</td><td><input type="number" name="ind12" required></td></tr>
-                                <tr><td>13. Total Number of Preschool Children 12-59 Months Old</td><td><input type="number" name="ind13" required></td></tr>
-                                <tr><td>14. Total Number of Preschool Children 24-59 Months Old</td><td><input type="number" name="ind14" required></td></tr>
-                                <tr><td>15. Total Number of Families With Wasted and Severely Wasted Preschool Children</td><td><input type="number" name="ind15" required></td></tr>
-                                <tr><td>16. Total Number of Families With Stunted and Severely Stunted Preschool Children</td><td><input type="number" name="ind16" required></td></tr>
+                                <tr><td>10. Total Number of Infants 0-5 Months Old</td><td><input type="number" name="ind10"></td></tr>
+                                <tr><td>11. Total Number of Infants 6-11 Months Old</td><td><input type="number" name="ind11"></td></tr>
+                                <tr><td>12. Total Number of Preschool Children 0-23 Months Old</td><td><input type="number" name="ind12"></td></tr>
+                                <tr><td>13. Total Number of Preschool Children 12-59 Months Old</td><td><input type="number" name="ind13"></td></tr>
+                                <tr><td>14. Total Number of Preschool Children 24-59 Months Old</td><td><input type="number" name="ind14"></td></tr>
+                                <tr><td>15. Total Number of Families With Wasted and Severely Wasted Preschool Children</td><td><input type="number" name="ind15"></td></tr>
+                                <tr><td>16. Total Number of Families With Stunted and Severely Stunted Preschool Children</td><td><input type="number" name="ind16"></td></tr>
                                 <tr>
                                     <td>17. Total Number of Educational Institutions(Pub./Priv.)</td>
                                     <td style="display:flex; gap:10px; font-weight:bold;">
@@ -288,25 +271,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     </td>
                                 </tr>
                                 <?php
-                                $edu = [
-                                    'a. Number of Day Care Centers',
-                                    'b. Number of Elementary Schools'
-                                ];
+                                $edu = ['a. Number of Day Care Centers', 'b. Number of Elementary Schools'];
                                 foreach($edu as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind17{$n}_public' placeholder='Public' style='flex:1; text-align:center;' required>
-                                                <input type='number' name='ind17{$n}_private' placeholder='Private' style='flex:1; text-align:center;' required>
+                                                <input type='number' name='ind17{$n}_public' placeholder='Public' style='flex:1; text-align:center;'>
+                                                <input type='number' name='ind17{$n}_private' placeholder='Private' style='flex:1; text-align:center;'>
                                             </td>
                                           </tr>";
                                 }
                                 ?>
-                                <tr><td>18. Total Number of Children Enrolled in Kindergarten</td><td><input type="number" name="ind18" required></td></tr>
-                                <tr><td>19. Total Number of School Children (grades 1-6)</td><td><input type="number" name="ind19" required></td></tr>
-                                <tr><td>20. Actual Number of School Children Weighed at Start of School Year</td><td><input type="number" name="ind20" required></td></tr>
-                                <tr><td>21. Percentage (%) Coverage of School Children Measured</td><td><input type="number" step="0.01" name="ind21" required></td></tr>
+                                <tr><td>18. Total Number of Children Enrolled in Kindergarten</td><td><input type="number" name="ind18"></td></tr>
+                                <tr><td>19. Total Number of School Children (grades 1-6)</td><td><input type="number" name="ind19"></td></tr>
+                                <tr><td>20. Actual Number of School Children Weighed at Start of School Year</td><td><input type="number" name="ind20"></td></tr>
+                                <tr><td>21. Percentage (%) Coverage of School Children Measured</td><td><input type="number" step="0.01" name="ind21"></td></tr>
                                 <tr>
                                     <td>22. Number and Percent (%) of School Children According to Nutritional Status Body Mas Index</td>
                                     <td style="display:flex; gap:10px; font-weight:bold;">
@@ -316,29 +296,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 </tr>
                                 <?php
                                 $school = [
-                                    'a. Severely Wasted',
-                                    'b. Wasted',
-                                    'c. Severely Stunted',
-                                    'd. Stunted',
-                                    'e. Normal',
-                                    'f. Overweight',
-                                    'g. Obese'
+                                    'a. Severely Wasted', 'b. Wasted', 'c. Severely Stunted',
+                                    'd. Stunted', 'e. Normal', 'f. Overweight', 'g. Obese'
                                 ];
                                 foreach($school as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind22{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind22{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind22{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind22{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
                                 ?>
-                                <tr><td>23. 0-5 Months Old Children Exclusively Breastfeed</td><td><input type="number" name="ind23" required></td></tr>
-                                <tr><td>24. Households with Severely Wasted School Children</td><td><input type="number" name="ind24" required></td></tr>
-                                <tr><td>25. School Children Dewormed at the Start of the School Year</td><td><input type="number" name="ind25" required></td></tr>
-                                <tr><td>26. Fully Immunized Children(FIC)</td><td><input type="number" name="ind26" required></td></tr>
+                                <tr><td>23. 0-5 Months Old Children Exclusively Breastfeed</td><td><input type="number" name="ind23"></td></tr>
+                                <tr><td>24. Households with Severely Wasted School Children</td><td><input type="number" name="ind24"></td></tr>
+                                <tr><td>25. School Children Dewormed at the Start of the School Year</td><td><input type="number" name="ind25"></td></tr>
+                                <tr><td>26. Fully Immunized Children(FIC)</td><td><input type="number" name="ind26"></td></tr>
                                 <tr>
                                     <td>27. Households, by Type of Toilet Facility</td>
                                     <td style="display:flex; gap:10px; font-weight:bold;">
@@ -347,20 +322,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     </td>
                                 </tr>
                                 <?php
-                                $toilet = [
-                                    'a. Water-sealed toilet',
-                                    'b. Antipolo (Unsanitary Toilet)',
-                                    'c. Open Pit',
-                                    'd. Shared',
-                                    'e. No Toilet'
-                                ];
+                                $toilet = ['a. Water-sealed toilet', 'b. Antipolo (Unsanitary Toilet)', 'c. Open Pit', 'd. Shared', 'e. No Toilet'];
                                 foreach($toilet as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind27{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind27{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind27{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind27{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
@@ -373,19 +342,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     </td>
                                 </tr>
                                 <?php
-                                $garbage_types = [
-                                    'a. Barangay/City Garbage Collection',
-                                    'b. Own Compose Pit',
-                                    'c. Burning',
-                                    'd. Dumping'
-                                ];
+                                $garbage_types = ['a. Barangay/City Garbage Collection', 'b. Own Compose Pit', 'c. Burning', 'd. Dumping'];
                                 foreach($garbage_types as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind28{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind28{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind28{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind28{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
@@ -399,21 +363,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 </tr>
                                 <?php
                                 $water_sources = [
-                                    'a. Pipe Water System(Level III)',
-                                    'b. Spring (Level II)',
+                                    'a. Pipe Water System(Level III)', 'b. Spring (Level II)', 
                                     'c. Deep Well With Topstand Communal Source Water System (Level II)',
-                                    'd. Deep Well With Individual Faucet (Level III)',
-                                    'e. Purified Station (Level III)',
-                                    'f. Open Shallow Dug Well (Level I)',
-                                    'g. Artesian Well '
+                                    'd. Deep Well With Individual Faucet (Level III)', 'e. Purified Station (Level III)',
+                                    'f. Open Shallow Dug Well (Level I)', 'g. Artesian Well '
                                 ];
                                 foreach($water_sources as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind29{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind29{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind29{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind29{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
@@ -426,19 +387,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     </td>
                                 </tr>
                                 <?php
-                                $household_items = [
-                                    'a. Vegetable Garden',
-                                    'b. Livestock Poultry',
-                                    'c. Fishponds',
-                                    'd. Other Specify: No Garden'
-                                ];
+                                $household_items = ['a. Vegetable Garden', 'b. Livestock Poultry', 'c. Fishponds', 'd. Other Specify: No Garden'];
                                 foreach($household_items as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind30{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind30{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind30{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind30{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
@@ -452,44 +408,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 </tr>
                                 <?php
                                 $dwelling_types = [
-                                    'a. Concrete',
-                                    'b. Semi Concrete',
-                                    'c. Wooden House',
-                                    'd. Nipa Bamboo House',
-                                    'e. Barong-Barong Makeshift',
-                                    'f. Makeshift'
+                                    'a. Concrete', 'b. Semi Concrete', 'c. Wooden House',
+                                    'd. Nipa Bamboo House', 'e. Barong-Barong Makeshift', 'f. Makeshift'
                                 ];
                                 foreach($dwelling_types as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
                                             <td style='display:flex; gap:10px;'>
-                                                <input type='number' name='ind31{$n}_no' placeholder='No' style='flex:1;' required>
-                                                <input type='number' step='0.01' name='ind31{$n}_pct' placeholder='%' style='flex:1;' required>
+                                                <input type='number' name='ind31{$n}_no' placeholder='No' style='flex:1;'>
+                                                <input type='number' step='0.01' name='ind31{$n}_pct' placeholder='%' style='flex:1;'>
                                             </td>
                                           </tr>";
                                 }
                                 ?>
-                                <tr><td>32. Total Number of Households Using Iodized Salt</td><td><input type="number" name="ind32" required></td></tr>
-                                <tr><td>33. Total Number of Eateries/Carenderia</td><td><input type="number" name="ind33" required></td></tr>
-                                <tr><td>34. Total Number of Sari-Sari Stores Related to Iodized Salt</td><td><input type="number" name="ind34" required></td></tr>
-                                <tr><td>35. Total Number of Sari-Sari Stores Related to Cooking Oil</td><td><input type="number" name="ind35" required></td></tr>
-                                <tr><td>36. Total Number of Bakery With Fortified Flour</td><td><input type="number" name="ind36" required></td></tr>
+                                <tr><td>32. Total Number of Households Using Iodized Salt</td><td><input type="number" name="ind32"></td></tr>
+                                <tr><td>33. Total Number of Eateries/Carenderia</td><td><input type="number" name="ind33"></td></tr>
+                                <tr><td>34. Total Number of Sari-Sari Stores Related to Iodized Salt</td><td><input type="number" name="ind34"></td></tr>
+                                <tr><td>35. Total Number of Sari-Sari Stores Related to Cooking Oil</td><td><input type="number" name="ind35"></td></tr>
+                                <tr><td>36. Total Number of Bakery With Fortified Flour</td><td><input type="number" name="ind36"></td></tr>
                                 <tr><td>37. Number of Health and Nutrition Workers:</td><td></td></tr>
                                 <?php
-                                $health_workers = [
-                                    'a. Barangay Nutrition Scholar',
-                                    'b. Barangay Health Worker'
-                                ];
+                                $health_workers = ['a. Barangay Nutrition Scholar', 'b. Barangay Health Worker'];
                                 foreach($health_workers as $i => $name) {
                                     $n = chr(97 + $i);
                                     echo "<tr>
                                             <td style='width:60%;'>$name</td>
-                                            <td><input type='number' name='ind37{$n}' placeholder='No' style='flex:1;' required></td>
+                                            <td><input type='number' name='ind37{$n}' placeholder='No' style='flex:1;'></td>
                                           </tr>";
                                 }
                                 ?>
-                                <tr><td>38. Total Number of Households Beneficiaries of Pantawid Pamilyang Pilipino Program</td><td><input type="number" name="ind38" required></td></tr>
+                                <tr><td>38. Total Number of Households Beneficiaries of Pantawid Pamilyang Pilipino Program</td><td><input type="number" name="ind38"></td></tr>
                             </table>
                         </div>
                         <div class="form-bottom">
@@ -503,11 +452,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <script src="js/add_report.js"></script>
 
-    <!-- Updated Google Forms Style Validation -->
     <script>
         document.getElementById("yearInput").value = new Date().getFullYear();
 
-        // Get the input elements
         const ind8 = document.querySelector("input[name='ind8']");
         const ind9 = document.querySelector("input[name='ind9']");
         const ind9a = document.querySelector("input[name='ind9a']");
@@ -602,141 +549,194 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             setupPercentCalculation('ind31', 6, ind2Total);
         }
 
-        const numberInputs = document.querySelectorAll('input[type="number"]');
-        numberInputs.forEach(input => {
-            input.addEventListener('keypress', function(e) {
-                const char = String.fromCharCode(e.which);
-                const isNumber = /[0-9]/.test(char);
-                const isDecimal = char === '.' && !this.value.includes('.');
-                if (!isNumber && !isDecimal) {
-                    e.preventDefault();
-                }
-            });
-            input.addEventListener('paste', function(e) {
-                const paste = (e.clipboardData || window.clipboardData).getData('text');
-                if (!/^\d*\.?\d*$/.test(paste)) {
-                    e.preventDefault();
-                }
-            });
-        });
-
         const calculatedFields = document.querySelectorAll(
             "input[name='ind1'], input[name='ind9a'], input[name='ind21'], input[type='number'][name$='_pct']"
         );
         calculatedFields.forEach(input => input.setAttribute('readonly', true));
 
         // ============================================
-        // GOOGLE FORMS STYLE VALIDATION (NO ALERT, JUST SCROLL & RED)
+        // VALIDATION - Submit button ALWAYS clickable
         // ============================================
 
         const form = document.querySelector('form');
-        const titleInput = document.getElementById('report-title');
-        const yearInputElem = document.getElementById('yearInput');
         const hiddenTitle = document.getElementById('hidden-title');
+        const titleInput = document.getElementById('report-title');
 
-        function removeAllRedHighlights() {
-            const allInputs = document.querySelectorAll('input[required], #report-title, #yearInput');
-            allInputs.forEach(input => {
-                input.style.backgroundColor = '';
-                input.style.border = '';
-                input.style.outline = '';
-                input.style.boxShadow = '';
-            });
+        function removeRedHighlight(input) {
+            input.style.backgroundColor = '';
+            input.style.border = '';
         }
 
-        function highlightEmptyFields() {
-            const requiredInputs = document.querySelectorAll('input[required]');
+        form.addEventListener('submit', function(e) {
+            const tableInputs = document.querySelectorAll('form table input');
             let missingFields = [];
             
-            requiredInputs.forEach(input => {
+            tableInputs.forEach(input => {
                 if (input.readOnly) return;
                 if (input.value.trim() === '') {
                     missingFields.push(input);
                     input.style.backgroundColor = '#ffe6e6';
-                    input.style.border = '2px solid #ff0000';
+                    input.style.border = '2px solid red';
                 } else {
-                    input.style.backgroundColor = '';
-                    input.style.border = '';
+                    removeRedHighlight(input);
                 }
             });
             
-            return missingFields;
-        }
-
-        function scrollToFirstEmptyField(fields) {
-            if (fields.length > 0) {
-                const firstField = fields[0];
-                firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstField.style.transition = 'all 0.3s ease';
-                firstField.style.boxShadow = '0 0 0 3px rgba(255,0,0,0.3)';
-                setTimeout(() => {
-                    firstField.style.boxShadow = '';
-                }, 1500);
+            if (missingFields.length > 0) {
+                e.preventDefault();
+                missingFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
             }
-        }
+            
+            hiddenTitle.value = titleInput.value.trim();
+            return true;
+        });
 
-        function addRealTimeValidation() {
-            const allInputs = document.querySelectorAll('input[required], #report-title, #yearInput');
-            allInputs.forEach(input => {
+        // NEW: Remove red color when user types in a field
+        document.querySelectorAll('form table input').forEach(input => {
+            if (!input.readOnly) {
                 input.addEventListener('input', function() {
-                    if (this.value.trim() !== '') {
-                        this.style.backgroundColor = '';
-                        this.style.border = '';
-                    }
+                    removeRedHighlight(this);
                 });
-                input.addEventListener('blur', function() {
-                    if (this.value.trim() === '' && !this.readOnly) {
-                        this.style.backgroundColor = '#ffe6e6';
-                        this.style.border = '2px solid #ff0000';
+            }
+        });
+
+        // ============================================
+        // CSV IMPORT - Disables all table input fields after import
+        // ============================================
+
+        const csvFileInput = document.getElementById('csvFile');
+        
+        function disableAllTableInputs(disabled) {
+            const tableInputs = document.querySelectorAll('form table input');
+            tableInputs.forEach(input => {
+                if (!input.hasAttribute('readonly')) {
+                    input.disabled = disabled;
+                    if (disabled) {
+                        input.style.backgroundColor = '#f0f0f0';
                     } else {
-                        this.style.backgroundColor = '';
-                        this.style.border = '';
+                        input.style.backgroundColor = '';
                     }
-                });
+                }
             });
         }
 
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                removeAllRedHighlights();
-                
-                let hasError = false;
-                
-                // Check title
-                if (titleInput.value.trim() === '') {
-                    titleInput.style.backgroundColor = '#ffe6e6';
-                    titleInput.style.border = '2px solid #ff0000';
-                    titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    hasError = true;
+        function enableAllTableInputs() {
+            disableAllTableInputs(false);
+        }
+
+        function parseCSVAndFill(csvText) {
+            const lines = csvText.split(/\r?\n/);
+            if (lines.length === 0) return;
+            
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const dataRow = lines[1] ? lines[1].split(',').map(d => d.trim().replace(/^"|"$/g, '')) : [];
+            
+            const fieldMapping = {
+                'ind1': 'ind1', 'ind_male': 'ind_male', 'ind_female': 'ind_female',
+                'ind2': 'ind2', 'ind3': 'ind3', 'ind4': 'ind4', 'ind5': 'ind5',
+                'ind6a': 'ind6a', 'ind6b': 'ind6b', 'ind7': 'ind7', 'ind8': 'ind8',
+                'ind9': 'ind9', 'ind9a': 'ind9a', 'ind10': 'ind10', 'ind11': 'ind11',
+                'ind12': 'ind12', 'ind13': 'ind13', 'ind14': 'ind14', 'ind15': 'ind15',
+                'ind16': 'ind16', 'ind18': 'ind18', 'ind19': 'ind19', 'ind20': 'ind20',
+                'ind21': 'ind21', 'ind23': 'ind23', 'ind24': 'ind24', 'ind25': 'ind25',
+                'ind26': 'ind26', 'ind32': 'ind32', 'ind33': 'ind33', 'ind34': 'ind34',
+                'ind35': 'ind35', 'ind36': 'ind36', 'ind37a': 'ind37a', 'ind37b': 'ind37b',
+                'ind38': 'ind38'
+            };
+            
+            for (let i = 1; i <= 9; i++) {
+                fieldMapping[`ind9b${i}_no`] = `ind9b${i}_no`;
+                fieldMapping[`ind9b${i}_pct`] = `ind9b${i}_pct`;
+            }
+            
+            for (let i = 0; i <= 6; i++) {
+                const letter = String.fromCharCode(97 + i);
+                fieldMapping[`ind22${letter}_no`] = `ind22${letter}_no`;
+                fieldMapping[`ind22${letter}_pct`] = `ind22${letter}_pct`;
+            }
+            
+            const publicPrivate = ['a', 'b'];
+            publicPrivate.forEach(letter => {
+                fieldMapping[`ind17${letter}_public`] = `ind17${letter}_public`;
+                fieldMapping[`ind17${letter}_private`] = `ind17${letter}_private`;
+            });
+            
+            const sections = [
+                { prefix: 'ind27', count: 5 }, { prefix: 'ind28', count: 4 },
+                { prefix: 'ind29', count: 7 }, { prefix: 'ind30', count: 4 },
+                { prefix: 'ind31', count: 6 }
+            ];
+            
+            sections.forEach(section => {
+                for (let i = 0; i < section.count; i++) {
+                    const letter = String.fromCharCode(97 + i);
+                    fieldMapping[`${section.prefix}${letter}_no`] = `${section.prefix}${letter}_no`;
+                    fieldMapping[`${section.prefix}${letter}_pct`] = `${section.prefix}${letter}_pct`;
                 }
-                
-                // Check year
-                if (!hasError && yearInputElem.value.trim() === '') {
-                    yearInputElem.style.backgroundColor = '#ffe6e6';
-                    yearInputElem.style.border = '2px solid #ff0000';
-                    yearInputElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    hasError = true;
+            });
+            
+            for (let i = 0; i < headers.length; i++) {
+                const header = headers[i];
+                const fieldName = fieldMapping[header];
+                if (fieldName && dataRow[i] !== undefined && dataRow[i] !== '') {
+                    const inputElement = document.querySelector(`input[name="${fieldName}"]`);
+                    if (inputElement && !inputElement.readOnly) {
+                        inputElement.value = dataRow[i];
+                        removeRedHighlight(inputElement);
+                    }
                 }
-                
-                // Check all required fields
-                const missingFields = highlightEmptyFields();
-                
-                if (missingFields.length > 0 && !hasError) {
-                    scrollToFirstEmptyField(missingFields);
-                    hasError = true;
+            }
+            
+            computeMeasuredCoverage();
+            computeInd21();
+            
+            for (let i = 1; i <= 9; i++) {
+                const noInput = document.querySelector(`input[name='ind9b${i}_no']`);
+                if (noInput) {
+                    const event = new Event('input');
+                    noInput.dispatchEvent(event);
                 }
-                
-                if (hasError) {
-                    e.preventDefault();
-                    return false;
+            }
+            
+            setupSchoolChildrenPct();
+            
+            sections.forEach(section => {
+                for (let i = 0; i < section.count; i++) {
+                    const letter = String.fromCharCode(97 + i);
+                    const noInput = document.querySelector(`input[name='${section.prefix}${letter}_no']`);
+                    if (noInput) {
+                        const event = new Event('input');
+                        noInput.dispatchEvent(event);
+                    }
                 }
+            });
+            
+            for (let i = 0; i <= 6; i++) {
+                const letter = String.fromCharCode(97 + i);
+                const noInput = document.querySelector(`input[name='ind22${letter}_no']`);
+                if (noInput) {
+                    const event = new Event('input');
+                    noInput.dispatchEvent(event);
+                }
+            }
+            
+            disableAllTableInputs(true);
+        }
+
+        if (csvFileInput) {
+            csvFileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
                 
-                hiddenTitle.value = titleInput.value.trim();
-                return true;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const csvData = evt.target.result;
+                    parseCSVAndFill(csvData);
+                };
+                reader.readAsText(file);
             });
         }
-        
-        addRealTimeValidation();
     </script>
 </body>
 </html>

@@ -803,7 +803,7 @@ datalabels: {
 }
 
 // ===================== LOAD INITIAL DATA =====================
-fetch('../landing_page/get_map_data.php')
+fetch('../cno/get_map_data.php')
   .then(r => r.json())
   .then(data => {
     geoData = data;
@@ -1646,7 +1646,7 @@ const preschoolBtn = document.getElementById('preschoolBtn');
 const schoolBtn = document.getElementById('schoolBtn');
 
 function loadPreschoolData() {
-    fetch('../landing_page/get_map_data.php')
+    fetch('../cno/get_map_data.php')
         .then(r => r.json())
         .then(data => {
             geoData = data;
@@ -1674,7 +1674,7 @@ function loadPreschoolData() {
 }
 
 function loadSchoolData() {
-    fetch('../landing_page/get_school_data.php')
+    fetch('../cno/get_school_data.php')
         .then(r => r.json())
         .then(data => {
             geoData = data;

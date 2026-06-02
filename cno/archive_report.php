@@ -177,6 +177,15 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
       margin-bottom:15px;
       font-size:14px;
     }
+    
+    .no-results {
+      color: #888;
+      padding: 20px;
+      text-align: center;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -214,7 +223,7 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="archive-list" id="archiveList">
       <?php if ($reports): ?>
         <?php foreach ($reports as $r): ?>
-          <div class="archive-item">
+          <div class="archive-item" data-title="<?= htmlspecialchars(strtolower($r['title'] ?? 'Untitled Report')) ?>" data-meta="<?= htmlspecialchars(strtolower($r['username'] . ' ' . ($r['barangay'] ?? '') . ' ' . ($r['year'] ?? ''))) ?>">
             <div>
               <div class="archive-title"><?= htmlspecialchars($r['title'] ?? 'Untitled Report') ?></div>
               <div class="archive-meta">
@@ -228,7 +237,7 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="menu-container" onclick="event.stopPropagation();">
               <button class="menu-btn"><i class="fa fa-ellipsis-v"></i></button>
               <div class="menu-content">
-<a href="view_report.php?id=<?= $r['id'] ?>"><i class="fa fa-eye"></i> View</a>
+                <a href="view_report.php?id=<?= $r['id'] ?>"><i class="fa fa-eye"></i> View</a>
                 <a href="archive/restore_report.php?id=<?= $r['id'] ?>" onclick="return confirm('Restore this report?')"><i class="fa fa-undo"></i> Restore</a>
                 <a href="archive/delete_report.php?id=<?= $r['id'] ?>" onclick="return confirm('Delete this report?')"><i class="fa fa-trash"></i> Delete Permanently</a>
               </div>
@@ -244,14 +253,114 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <script>
-document.querySelectorAll('.menu-btn').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    this.parentElement.classList.toggle('active');
-  });
+// ========== SEARCH FUNCTIONALITY ==========
+document.getElementById('search').addEventListener('keyup', function() {
+    let searchValue = this.value.toLowerCase();
+    let archiveItems = document.querySelectorAll('.archive-item');
+    let visibleCount = 0;
+    
+    archiveItems.forEach(function(item) {
+        let title = item.querySelector('.archive-title').innerText.toLowerCase();
+        let meta = item.querySelector('.archive-meta').innerText.toLowerCase();
+        
+        if (title.includes(searchValue) || meta.includes(searchValue)) {
+            item.style.display = "flex";
+            visibleCount++;
+        } else {
+            item.style.display = "none";
+        }
+    });
+    
+    // Show "no results" message if nothing found
+    let existingMsg = document.getElementById('noResultsMsg');
+    if (visibleCount === 0 && archiveItems.length > 0) {
+        if (!existingMsg) {
+            let msg = document.createElement('div');
+            msg.id = 'noResultsMsg';
+            msg.className = 'no-results';
+            msg.innerHTML = '<i class="fa fa-search"></i> No matching reports found';
+            document.getElementById('archiveList').appendChild(msg);
+        }
+    } else if (existingMsg) {
+        existingMsg.remove();
+    }
 });
-document.addEventListener('click', () => {
-  document.querySelectorAll('.menu-container').forEach(c => c.classList.remove('active'));
+
+// ========== SORT FUNCTIONALITY ==========
+document.getElementById('sort').addEventListener('change', function() {
+    let sortValue = this.value;
+    let archiveList = document.getElementById('archiveList');
+    let items = Array.from(document.querySelectorAll('.archive-item'));
+    
+    if (sortValue === 'title') {
+        // Sort A → Z by title
+        items.sort((a, b) => {
+            let titleA = a.querySelector('.archive-title').innerText.toLowerCase();
+            let titleB = b.querySelector('.archive-title').innerText.toLowerCase();
+            return titleA.localeCompare(titleB);
+        });
+    } else if (sortValue === 'date') {
+        // Sort Newest → Oldest by date
+        items.sort((a, b) => {
+            let metaA = a.querySelector('.archive-meta').innerText;
+            let metaB = b.querySelector('.archive-meta').innerText;
+            // Extract date pattern like "12-25-2024"
+            let dateMatchA = metaA.match(/(\d{2}-\d{2}-\d{4})/);
+            let dateMatchB = metaB.match(/(\d{2}-\d{2}-\d{4})/);
+            
+            if (dateMatchA && dateMatchB) {
+                // Convert "MM-DD-YYYY" to Date object
+                let partsA = dateMatchA[0].split('-');
+                let partsB = dateMatchB[0].split('-');
+                let dateA = new Date(partsA[2], partsA[0] - 1, partsA[1]);
+                let dateB = new Date(partsB[2], partsB[0] - 1, partsB[1]);
+                return dateB - dateA; // Newest first
+            }
+            return 0;
+        });
+    }
+    
+    // Remove "no results" message if exists before re-sorting
+    let noResultsMsg = document.getElementById('noResultsMsg');
+    if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+    
+    // Re-append sorted items
+    items.forEach(item => archiveList.appendChild(item));
+    
+    // Re-apply current search filter after sorting
+    let searchInput = document.getElementById('search');
+    if (searchInput.value) {
+        let event = new Event('keyup');
+        searchInput.dispatchEvent(event);
+    }
+});
+
+// ========== MENU BUTTON FUNCTIONALITY ==========
+document.querySelectorAll('.menu-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Close other open menus
+        document.querySelectorAll('.menu-container').forEach(c => {
+            if (c !== this.parentElement) {
+                c.classList.remove('active');
+            }
+        });
+        this.parentElement.classList.toggle('active');
+    });
+});
+
+// Close menus when clicking elsewhere
+document.addEventListener('click', function() {
+    document.querySelectorAll('.menu-container').forEach(c => c.classList.remove('active'));
+});
+
+// Prevent menu from closing when clicking inside menu content
+document.querySelectorAll('.menu-content').forEach(menu => {
+    menu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
 });
 </script>
 </body>

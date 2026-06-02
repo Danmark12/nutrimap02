@@ -534,7 +534,7 @@ body{background:var(--surface);color:var(--text);}
     <div class="card fu fu3">
       <div class="card-header"><span class="card-title"><i class="fa fa-history"></i>Recent Activity</span><a href="report_history.php" style="font-size:11px;color:var(--teal-500);text-decoration:none;">View all →</a></div>
       <div style="padding:.5rem 1.375rem;"><?php if($recentActivity): foreach($recentActivity as $act): $dc=$act['status']==='Approved'?'#22c55e':($act['status']==='Rejected'?'#ef4444':'#f59e0b'); ?>
-        <div class="act-item"><div class="act-dot" style="background:<?=$dc?>;"></div><div style="flex:1;"><p style="font-size:13px;font-weight:500;"><?= htmlspecialchars($act['title']) ?></p><p style="font-size:11px;color:var(--muted);margin-top:2px;"><span class="badge b-<?= strtolower($act['status']) ?>"><?= $act['status'] ?></span> <?= htmlspecialchars($act['report_date']) ?></p></div><a href="view_report.php?id=<?= $act['id'] ?>" style="font-size:11px;color:var(--teal-500);">View →</a></div>
+        <div class="act-item"><div class="act-dot" style="background:<?=$dc?>;"></div><div style="flex:1;"><p style="font-size:13px;font-weight:500;"><?= htmlspecialchars($act['title']) ?></p><p style="font-size:11px;color:var(--muted);margin-top:2px;"><span class="badge b-<?= strtolower($act['status']) ?>"><?= $act['status'] ?></span> <?= htmlspecialchars($act['report_date']) ?></p></div><a href="view_approved_report.php?id=<?= $act['id'] ?>" style="font-size:11px;color:var(--teal-500);">View →</a></div>
       <?php endforeach; else: ?><p style="text-align:center;font-size:13px;color:var(--muted);padding:1.5rem 0;">No activity yet for <?= $selectedGlobalYear ?>.</p><?php endif; ?></div>
     </div>
   </div>
