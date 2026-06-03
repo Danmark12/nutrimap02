@@ -287,12 +287,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
         </form>
         
-        <!-- Decorative line -->
-        <div class="mt-4 pt-3 text-center">
-          <p class="text-[10px] text-gray-400">
-            <i class="fa-regular fa-shield-heart mr-0.5"></i> Secure login powered by CNO NutriMap
-          </p>
-        </div>
       </div>
     </div>
 

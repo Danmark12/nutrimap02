@@ -1618,7 +1618,15 @@ formatter: function(value, context) {
 const btnMapView = document.getElementById('btnMapView');
 const btnChartView = document.getElementById('btnChartView');
 
+// Function to handle button highlight
+function setActiveViewButton(activeButton) {
+  btnMapView.classList.remove('active');
+  btnChartView.classList.remove('active');
+  activeButton.classList.add('active');
+}
+
 btnMapView.addEventListener('click', () => {
+  setActiveViewButton(btnMapView);
   const barangaySelect = document.getElementById('barangayFilter');
   barangaySelect.disabled = false;
   
@@ -1631,6 +1639,7 @@ btnMapView.addEventListener('click', () => {
 });
 
 btnChartView.addEventListener('click', () => {
+  setActiveViewButton(btnChartView);
   const barangaySelect = document.getElementById('barangayFilter');
   barangaySelect.disabled = false;
   

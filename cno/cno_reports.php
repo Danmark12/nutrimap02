@@ -24,8 +24,8 @@ foreach ($statuses as $status) {
     $reports[$status] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Fetch barangays for filter
-$barangays = $pdo->query("SELECT DISTINCT barangay FROM users ORDER BY barangay ASC")->fetchAll(PDO::FETCH_COLUMN);
+// Fetch barangays for filter (exclude 'CNO' from the list)
+$barangays = $pdo->query("SELECT DISTINCT barangay FROM users WHERE barangay != 'CNO' ORDER BY barangay ASC")->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
 <html lang="en">

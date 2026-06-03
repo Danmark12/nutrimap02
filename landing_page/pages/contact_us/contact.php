@@ -100,7 +100,7 @@
       $message = trim($_POST['message']);
 
       if (!empty($name) && !empty($email) && !empty($message)) {
-          $to = "danmarkpetalcurin@gmail.com";
+          $to = "citynutritionoffice@elsalvadorcity.gov.phs";
           $subject = "New Message from visitor - $name";
 
           $body = "
